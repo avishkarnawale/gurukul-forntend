@@ -139,7 +139,12 @@ function Landing() {
               <Button asChild size="lg">
                 <Link to="/login">{t.hero.ctaPortal}</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-[#25D366] text-[#128C7E] hover:bg-[#25D366]/10">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-[#25D366] text-[#128C7E] hover:bg-[#25D366]/10"
+              >
                 <a href={waDefault} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-4 w-4" />
                   {t.whatsapp.chatShort}
@@ -170,7 +175,9 @@ function Landing() {
           {/* Owner contact + inquiry (replaces portal mock) */}
           <div className="card-elevated space-y-6 p-6">
             <div className="rounded-xl border border-border bg-muted/30 p-5">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">{t.heroCard.ownerLabel}</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                {t.heroCard.ownerLabel}
+              </p>
               <div className="mt-3 flex items-center gap-3">
                 <div className="grid h-12 w-12 place-items-center rounded-full bg-primary-soft text-primary">
                   <User className="h-6 w-6" />
@@ -222,7 +229,11 @@ function Landing() {
                   required
                 />
               </div>
-              <Button type="submit" className="w-full bg-[#25D366] hover:bg-[#20bd5a]" disabled={sending}>
+              <Button
+                type="submit"
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a]"
+                disabled={sending}
+              >
                 <MessageCircle className="mr-2 h-4 w-4" />
                 {sending ? "…" : t.heroCard.inquirySend}
               </Button>
@@ -236,7 +247,9 @@ function Landing() {
       <section id="about" className="border-t border-border bg-muted/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="text-sm font-semibold text-primary">{t.about.subtitle}</p>
-          <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">{t.about.title}</h2>
+          <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">
+            {t.about.title}
+          </h2>
           <div className="mt-8 grid gap-8 lg:grid-cols-2">
             <p className="text-lg leading-relaxed text-muted-foreground">{t.about.p1}</p>
             <p className="text-lg leading-relaxed text-muted-foreground">{t.about.p2}</p>
@@ -262,7 +275,9 @@ function Landing() {
 
       {/* Why */}
       <section id="why" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-        <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{t.why.title}</h2>
+        <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+          {t.why.title}
+        </h2>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {t.why.items.map((item, i) => (
             <div key={i} className="stat-tile">
@@ -278,7 +293,9 @@ function Landing() {
       <section id="subjects" className="border-t border-border bg-muted/30 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
           <p className="text-sm font-semibold text-primary">{t.subjects.subtitle}</p>
-          <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">{t.subjects.title}</h2>
+          <h2 className="mt-2 font-display text-3xl font-bold tracking-tight md:text-4xl">
+            {t.subjects.title}
+          </h2>
           <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {t.subjects.list.map((sub, i) => {
               const Icon = subjectIcons[i] ?? GraduationCap;
@@ -300,7 +317,9 @@ function Landing() {
 
       {/* Contact */}
       <section id="contact" className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-        <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{t.contact.title}</h2>
+        <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+          {t.contact.title}
+        </h2>
         <div className="card-elevated mt-10 grid gap-6 p-8 md:grid-cols-2">
           <div className="space-y-4">
             <div className="flex gap-3">
@@ -313,7 +332,10 @@ function Landing() {
             </div>
             <div className="flex gap-3">
               <Phone className="h-5 w-5 shrink-0 text-primary" />
-              <a href={`tel:${SITE_OWNER.phoneTel}`} className="text-muted-foreground hover:text-foreground">
+              <a
+                href={`tel:${SITE_OWNER.phoneTel}`}
+                className="text-muted-foreground hover:text-foreground"
+              >
                 {t.contact.phone}
               </a>
             </div>
@@ -332,7 +354,9 @@ function Landing() {
             <MessageCircle className="h-12 w-12 text-[#25D366]" />
             <p className="mt-4 font-medium">{SITE_OWNER.phoneDisplay}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              {lang === "mr" ? "प्रवेश, फी आणि वेळापत्रकासाठी WhatsApp करा" : "WhatsApp for admission, fees & timings"}
+              {lang === "mr"
+                ? "प्रवेश, फी आणि वेळापत्रकासाठी WhatsApp करा"
+                : "WhatsApp for admission, fees & timings"}
             </p>
           </div>
         </div>
@@ -341,7 +365,9 @@ function Landing() {
       {/* Portals */}
       <section id="portals" className="border-t border-border bg-muted/40 py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6">
-          <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">{t.portals.title}</h2>
+          <h2 className="font-display text-3xl font-bold tracking-tight md:text-4xl">
+            {t.portals.title}
+          </h2>
           <div className="mt-10 grid gap-6 md:grid-cols-2">
             <div className="card-elevated p-8">
               <div className="inline-flex rounded-full bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground">

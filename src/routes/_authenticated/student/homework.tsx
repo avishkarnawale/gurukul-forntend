@@ -15,7 +15,9 @@ function Page() {
         {(data ?? []).map((h) => (
           <div key={h.id} className="card-elevated p-5">
             <div className="flex items-center justify-between">
-              <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold text-primary">{h.subjects?.name ?? "General"}</span>
+              <span className="rounded-full bg-primary-soft px-2.5 py-1 text-[11px] font-semibold text-primary">
+                {h.subjects?.name ?? "General"}
+              </span>
               <span className="text-xs font-medium text-muted-foreground">Due {h.due_date}</span>
             </div>
             <h3 className="mt-3 font-display text-base font-bold">{h.title}</h3>

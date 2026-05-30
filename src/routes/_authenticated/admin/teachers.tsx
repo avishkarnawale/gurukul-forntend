@@ -7,7 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Plus, UserCog, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -43,7 +49,13 @@ function Page() {
       <div className="card-elevated overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
-            <tr><th className="p-3">Name</th><th className="p-3">Email</th><th className="p-3">Designation</th><th className="p-3">Phone</th><th className="p-3 text-right">Actions</th></tr>
+            <tr>
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Designation</th>
+              <th className="p-3">Phone</th>
+              <th className="p-3 text-right">Actions</th>
+            </tr>
           </thead>
           <tbody>
             {(data ?? []).map((s) => (
@@ -76,7 +88,12 @@ function Page() {
             ))}
           </tbody>
         </table>
-        {!data?.length && <EmptyState title="No teachers yet" hint="Click Add Teacher to invite your first staff member." />}
+        {!data?.length && (
+          <EmptyState
+            title="No teachers yet"
+            hint="Click Add Teacher to invite your first staff member."
+          />
+        )}
       </div>
     </div>
   );
@@ -84,7 +101,13 @@ function Page() {
 
 function AddTeacher({ onDone }: { onDone: () => void }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ full_name: "", email: "", password: "", designation: "", phone: "" });
+  const [form, setForm] = useState({
+    full_name: "",
+    email: "",
+    password: "",
+    designation: "",
+    phone: "",
+  });
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
@@ -105,16 +128,59 @@ function AddTeacher({ onDone }: { onDone: () => void }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Teacher</Button></DialogTrigger>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> Add Teacher
+        </Button>
+      </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Add staff member</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Add staff member</DialogTitle>
+        </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
-          <div><Label>Name</Label><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required /></div>
-          <div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required /></div>
-          <div><Label>Password</Label><Input type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} required /></div>
-          <div><Label>Department / designation</Label><Input value={form.designation} onChange={(e) => setForm({ ...form, designation: e.target.value })} /></div>
-          <div><Label>Phone</Label><Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} /></div>
-          <Button type="submit" className="w-full" disabled={busy}>Add</Button>
+          <div>
+            <Label>Name</Label>
+            <Input
+              value={form.full_name}
+              onChange={(e) => setForm({ ...form, full_name: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label>Email</Label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label>Password</Label>
+            <Input
+              type="password"
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label>Department / designation</Label>
+            <Input
+              value={form.designation}
+              onChange={(e) => setForm({ ...form, designation: e.target.value })}
+            />
+          </div>
+          <div>
+            <Label>Phone</Label>
+            <Input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={busy}>
+            Add
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

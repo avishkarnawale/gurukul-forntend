@@ -31,8 +31,10 @@ export default defineConfig({
             // Keep the entire React core (react + react-dom + scheduler + react-is)
             // in ONE chunk. Splitting these apart breaks React's singleton and
             // causes "Cannot read properties of undefined (reading 'useLayoutEffect')".
-            if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-is)[\\/]/.test(id)) return "vendor-react";
-            if (id.includes("recharts") || id.includes("d3-") || id.includes("victory-vendor")) return "vendor-charts";
+            if (/[\\/]node_modules[\\/](react|react-dom|scheduler|react-is)[\\/]/.test(id))
+              return "vendor-react";
+            if (id.includes("recharts") || id.includes("d3-") || id.includes("victory-vendor"))
+              return "vendor-charts";
             if (id.includes("@radix-ui")) return "vendor-radix";
             if (id.includes("lucide-react")) return "vendor-icons";
           },

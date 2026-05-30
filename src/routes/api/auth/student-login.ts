@@ -25,7 +25,7 @@ export const Route = createFileRoute("/api/auth/student-login")({
         const supabase = createClient(
           process.env.SUPABASE_URL!,
           process.env.SUPABASE_PUBLISHABLE_KEY!,
-          { auth: { persistSession: false, autoRefreshToken: false } }
+          { auth: { persistSession: false, autoRefreshToken: false } },
         );
 
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -33,10 +33,7 @@ export const Route = createFileRoute("/api/auth/student-login")({
           password: parsed.dateOfBirth,
         });
         if (error || !data.session) {
-          return Response.json(
-            { error: "Invalid roll number or date of birth" },
-            { status: 401 }
-          );
+          return Response.json({ error: "Invalid roll number or date of birth" }, { status: 401 });
         }
 
         return Response.json({

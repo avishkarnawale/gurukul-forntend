@@ -76,7 +76,11 @@ export async function staffLogin(email: string, password: string) {
   return {
     access_token: body.access_token ?? body.token!,
     role,
-    user: { id: String(body.user?.id ?? body.user?._id), email: body.user?.email, name: body.user?.name },
+    user: {
+      id: String(body.user?.id ?? body.user?._id),
+      email: body.user?.email,
+      name: body.user?.name,
+    },
   };
 }
 
@@ -103,9 +107,12 @@ export async function fetchAdminDashboard() {
 // ── Classes ──────────────────────────────────────────────────────────────────
 
 export async function fetchClasses() {
-  const body = await apiFetch<ApiList<Array<{ id: string; name: string; board?: string; batch?: string; studentCount?: number }>>>(
-    "/api/meta/classes",
-  );
+  const body =
+    await apiFetch<
+      ApiList<
+        Array<{ id: string; name: string; board?: string; batch?: string; studentCount?: number }>
+      >
+    >("/api/meta/classes");
   return list(body);
 }
 
@@ -231,7 +238,9 @@ export async function fetchStudentSummary(id: string): Promise<StudentSummary> {
 
 export async function fetchStaff() {
   const body = await apiFetch<ApiList<Record<string, unknown>>>("/api/users?role=staff");
-  const admins = await apiFetch<ApiList<Record<string, unknown>>>("/api/users?role=admin").catch(() => ({ data: [] }));
+  const admins = await apiFetch<ApiList<Record<string, unknown>>>("/api/users?role=admin").catch(
+    () => ({ data: [] }),
+  );
   return [...list(body), ...list(admins)].map((u) => ({
     id: idOf(u),
     full_name: String(u.name ?? ""),
@@ -329,7 +338,12 @@ export async function fetchClassAttendance(className: string, date: string) {
   return map;
 }
 
-export async function markAttendance(className: string, date: string, studentId: string, status: "present" | "absent") {
+export async function markAttendance(
+  className: string,
+  date: string,
+  studentId: string,
+  status: "present" | "absent",
+) {
   await apiFetch("/api/attendance", {
     method: "POST",
     body: JSON.stringify({
@@ -587,7 +601,9 @@ function mapNotification(n: Record<string, unknown>): PortalNotification {
     body: String(n.body ?? ""),
     link: String(n.link ?? "/student/notices"),
     read: Boolean(n.read),
-    createdAt: n.createdAt ? new Date(n.createdAt as string).toISOString() : new Date().toISOString(),
+    createdAt: n.createdAt
+      ? new Date(n.createdAt as string).toISOString()
+      : new Date().toISOString(),
     refId: n.refId ? String(n.refId) : undefined,
   };
 }
@@ -638,9 +654,9 @@ function mapGrade(g: Record<string, unknown>) {
 }
 
 export async function fetchMyGrades() {
-  const body = await apiFetch<{ data?: Record<string, unknown>[] } & ApiList<Record<string, unknown>>>(
-    "/api/results/me",
-  );
+  const body = await apiFetch<
+    { data?: Record<string, unknown>[] } & ApiList<Record<string, unknown>>
+  >("/api/results/me");
   const rows = Array.isArray(body) ? body : (body.data ?? []);
   return rows.map(mapGrade);
 }

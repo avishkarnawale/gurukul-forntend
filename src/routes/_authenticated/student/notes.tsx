@@ -7,7 +7,10 @@ import { FileText, Download } from "lucide-react";
 export const Route = createFileRoute("/_authenticated/student/notes")({ component: Page });
 
 function Page() {
-  const { data } = usePortalQuery({ queryKey: ["student-notes"], queryFn: () => fetchNotes("note") });
+  const { data } = usePortalQuery({
+    queryKey: ["student-notes"],
+    queryFn: () => fetchNotes("note"),
+  });
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -20,17 +23,27 @@ function Page() {
               <h3 className="font-display text-base font-bold">{n.title}</h3>
             </div>
             <p className="mt-1 text-xs text-muted-foreground">
-              {n.classes?.name ?? "General"}{n.subjects?.name ? ` · ${n.subjects.name}` : ""}
+              {n.classes?.name ?? "General"}
+              {n.subjects?.name ? ` · ${n.subjects.name}` : ""}
             </p>
             {n.description && <p className="mt-2 text-sm text-muted-foreground">{n.description}</p>}
             {n.file_url && (
-              <a href={n.file_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+              <a
+                href={n.file_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
                 <Download className="h-3 w-3" /> Download
               </a>
             )}
           </div>
         ))}
-        {!data?.length && <div className="sm:col-span-2"><EmptyState title="No notes available yet" /></div>}
+        {!data?.length && (
+          <div className="sm:col-span-2">
+            <EmptyState title="No notes available yet" />
+          </div>
+        )}
       </div>
     </div>
   );

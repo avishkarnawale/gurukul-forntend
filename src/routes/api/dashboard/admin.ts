@@ -28,7 +28,7 @@ export const Route = createFileRoute("/api/dashboard/admin")({
 
         const due = (fees.data ?? []).reduce(
           (s, f: any) => s + (Number(f.total_amount) - Number(f.paid_amount)),
-          0
+          0,
         );
         const total = att.data?.length ?? 0;
         const present = att.data?.filter((a) => a.status === "present").length ?? 0;

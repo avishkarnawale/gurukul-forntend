@@ -1,10 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { usePortalQuery } from "@/hooks/use-portal-query";
 import { useQueryClient } from "@tanstack/react-query";
-import { fetchClasses, fetchStudentsByClass, fetchClassAttendance, markAttendance } from "@/lib/portal-api";
+import {
+  fetchClasses,
+  fetchStudentsByClass,
+  fetchClassAttendance,
+  markAttendance,
+} from "@/lib/portal-api";
 import { PageHeader, EmptyState, QueryState } from "@/components/portal/ui";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -77,7 +88,10 @@ function Page() {
       }}
     >
       <div className="mx-auto max-w-5xl">
-        <PageHeader title="Mark Attendance" subtitle="Select class (grade + board) that matches each student" />
+        <PageHeader
+          title="Mark Attendance"
+          subtitle="Select class (grade + board) that matches each student"
+        />
         <div className="card-elevated mb-4 flex flex-wrap items-end gap-3 p-4">
           <div className="min-w-[220px] flex-1">
             <p className="mb-1 text-xs font-medium text-muted-foreground">Class</p>
@@ -104,7 +118,10 @@ function Page() {
             const st = markedQ.data?.[s.id];
             const busy = saving === s.id;
             return (
-              <div key={s.id} className="flex items-center justify-between border-b border-border p-3 last:border-0">
+              <div
+                key={s.id}
+                className="flex items-center justify-between border-b border-border p-3 last:border-0"
+              >
                 <div>
                   <p className="text-sm font-medium">{s.full_name}</p>
                   <p className="text-xs text-muted-foreground">Roll {s.roll_number}</p>
@@ -116,7 +133,11 @@ function Page() {
                     disabled={busy}
                     onClick={() => mark(s.id, "present")}
                   >
-                    {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+                    {busy ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
                   </Button>
                   <Button
                     size="sm"

@@ -8,8 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Plus, Trash2, Pin } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -58,7 +70,9 @@ function Page() {
                 <h3 className="font-display text-base font-bold">{n.title}</h3>
                 {n.pinned && <Pin className="h-3.5 w-3.5 text-primary" />}
               </div>
-              <Button size="sm" variant="ghost" onClick={() => remove(n.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+              <Button size="sm" variant="ghost" onClick={() => remove(n.id)}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
             </div>
             <p className="mt-2 text-sm text-muted-foreground">{n.content}</p>
           </div>
@@ -90,7 +104,13 @@ function NewNotice({ onDone }: { onDone: () => void }) {
       );
       onDone();
       setOpen(false);
-      setForm({ title: "", content: "", pinned: false, category: "academic", targetAudience: "all" });
+      setForm({
+        title: "",
+        content: "",
+        pinned: false,
+        category: "academic",
+        targetAudience: "all",
+      });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -98,16 +118,41 @@ function NewNotice({ onDone }: { onDone: () => void }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> New Notice</Button></DialogTrigger>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> New Notice
+        </Button>
+      </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Post a notice</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Post a notice</DialogTitle>
+        </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
-          <div><Label>Title</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required /></div>
-          <div><Label>Content</Label><Textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} required /></div>
+          <div>
+            <Label>Title</Label>
+            <Input
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+          </div>
+          <div>
+            <Label>Content</Label>
+            <Textarea
+              value={form.content}
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              required
+            />
+          </div>
           <div>
             <Label>Category</Label>
-            <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v as typeof form.category })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={form.category}
+              onValueChange={(v) => setForm({ ...form, category: v as typeof form.category })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="academic">Academic (notify students)</SelectItem>
                 <SelectItem value="general">General</SelectItem>
@@ -117,8 +162,15 @@ function NewNotice({ onDone }: { onDone: () => void }) {
           </div>
           <div>
             <Label>Audience</Label>
-            <Select value={form.targetAudience} onValueChange={(v) => setForm({ ...form, targetAudience: v as typeof form.targetAudience })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={form.targetAudience}
+              onValueChange={(v) =>
+                setForm({ ...form, targetAudience: v as typeof form.targetAudience })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Everyone</SelectItem>
                 <SelectItem value="students">Students only</SelectItem>
@@ -126,8 +178,16 @@ function NewNotice({ onDone }: { onDone: () => void }) {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex items-center gap-3"><Switch checked={form.pinned} onCheckedChange={(v) => setForm({ ...form, pinned: v })} /><span className="text-sm">Pin to top</span></div>
-          <Button type="submit" className="w-full">Post</Button>
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={form.pinned}
+              onCheckedChange={(v) => setForm({ ...form, pinned: v })}
+            />
+            <span className="text-sm">Pin to top</span>
+          </div>
+          <Button type="submit" className="w-full">
+            Post
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

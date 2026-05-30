@@ -1,4 +1,10 @@
-import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { clearSession } from "@/lib/api";
@@ -27,7 +33,8 @@ function AuthedLayout() {
     if (loading || !session) return;
     // Redirect students away from /admin and vice versa
     if (path.startsWith("/admin") && role === "student") navigate({ to: "/student" });
-    if (path.startsWith("/student") && (role === "admin" || role === "staff")) navigate({ to: "/admin" });
+    if (path.startsWith("/student") && (role === "admin" || role === "staff"))
+      navigate({ to: "/admin" });
   }, [path, role, loading, session, navigate]);
 
   if (loading || !session) {
@@ -51,8 +58,12 @@ function AuthedLayout() {
             <div className="flex items-center gap-1">
               {isStudent && <StudentNotificationBell />}
               <Button
-                variant="ghost" size="sm"
-                onClick={() => { clearSession(); navigate({ to: "/login" }); }}
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  clearSession();
+                  navigate({ to: "/login" });
+                }}
               >
                 <LogOut className="mr-2 h-4 w-4" /> Sign out
               </Button>
