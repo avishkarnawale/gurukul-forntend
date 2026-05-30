@@ -1,0 +1,9 @@
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/_authenticated/student")({
+  component: StudentLayout,
+});
+
+function StudentLayout() {
+  return <Outlet />;
+}
