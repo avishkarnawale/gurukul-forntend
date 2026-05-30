@@ -82,10 +82,16 @@ export async function staffLogin(email: string, password: string) {
 
 // Admin password reset via WhatsApp OTP.
 export async function requestPasswordReset(email?: string) {
-  return apiFetch<{ message: string; maskedPhone: string; delivered: boolean }>(
-    "/api/auth/forgot-password",
-    { method: "POST", body: JSON.stringify({ email: email || undefined }) },
-  );
+  return apiFetch<{
+    message: string;
+    channel: "email" | "whatsapp" | "log";
+    maskedContact: string;
+    maskedPhone: string;
+    delivered: boolean;
+  }>("/api/auth/forgot-password", {
+    method: "POST",
+    body: JSON.stringify({ email: email || undefined }),
+  });
 }
 
 export async function resetPasswordWithOtp(otp: string, newPassword: string, email?: string) {

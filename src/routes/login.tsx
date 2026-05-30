@@ -171,7 +171,8 @@ function ForgotPasswordDialog({
   const navigate = useNavigate();
   const [step, setStep] = useState<"request" | "verify">("request");
   const [email, setEmail] = useState(defaultEmail || "");
-  const [maskedPhone, setMaskedPhone] = useState("");
+  const [maskedContact, setMaskedContact] = useState("");
+  const [channel, setChannel] = useState<"email" | "whatsapp" | "log">("email");
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -179,7 +180,7 @@ function ForgotPasswordDialog({
 
   const reset = () => {
     setStep("request");
-    setMaskedPhone("");
+    setMaskedContact("");
     setOtp("");
     setNewPassword("");
     setConfirm("");
@@ -190,15 +191,18 @@ function ForgotPasswordDialog({
     setBusy(true);
     try {
       const res = await requestPasswordReset(email);
-      setMaskedPhone(res.maskedPhone);
+      setMaskedContact(res.maskedContact);
+      setChannel(res.channel);
       setStep("verify");
-      toast.success(res.delivered ? `Code sent to ${res.maskedPhone}` : res.message);
+      toast.success(res.delivered ? `Code sent to ${res.maskedContact}` : res.message);
     } catch (err: any) {
       toast.error(err.message || "Could not send the code.");
     } finally {
       setBusy(false);
     }
   };
+
+  const channelLabel = channel === "whatsapp" ? "WhatsApp" : "email";
 
   const doReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -236,8 +240,8 @@ function ForgotPasswordDialog({
           </DialogTitle>
           <DialogDescription>
             {step === "request"
-              ? "We'll send a one-time code to the owner's registered WhatsApp number."
-              : `Enter the 6-digit code sent to ${maskedPhone} and choose a new password.`}
+              ? "We'll send a one-time code to the owner's registered email."
+              : `Enter the 6-digit code sent to your ${channelLabel} (${maskedContact}) and choose a new password.`}
           </DialogDescription>
         </DialogHeader>
 
@@ -259,7 +263,7 @@ function ForgotPasswordDialog({
             </div>
             <Button className="w-full" onClick={sendCode} disabled={busy}>
               {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Send OTP to WhatsApp
+              Send OTP
             </Button>
           </div>
         ) : (
