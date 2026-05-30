@@ -80,6 +80,32 @@ export async function staffLogin(email: string, password: string) {
   };
 }
 
+// Admin password reset via WhatsApp OTP.
+export async function requestPasswordReset(email?: string) {
+  return apiFetch<{ message: string; maskedPhone: string; delivered: boolean }>(
+    "/api/auth/forgot-password",
+    { method: "POST", body: JSON.stringify({ email: email || undefined }) },
+  );
+}
+
+export async function resetPasswordWithOtp(otp: string, newPassword: string, email?: string) {
+  const body = await apiFetch<{
+    access_token?: string;
+    token?: string;
+    role?: string;
+    user?: { id?: string; _id?: string; email?: string; name?: string };
+  }>("/api/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify({ otp, newPassword, email: email || undefined }),
+  });
+  const role = (body.role === "admin" ? "admin" : "staff") as "admin" | "staff";
+  return {
+    access_token: body.access_token ?? body.token!,
+    role,
+    user: { id: String(body.user?.id ?? body.user?._id), email: body.user?.email, name: body.user?.name },
+  };
+}
+
 // ── Dashboard ────────────────────────────────────────────────────────────────
 
 export async function fetchStudentDashboard() {
