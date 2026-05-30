@@ -22,7 +22,12 @@ function Page() {
             <p className="mt-1 text-xs text-muted-foreground">{n.subjects?.name ?? "General"}</p>
             {n.description && <p className="mt-2 text-sm text-muted-foreground">{n.description}</p>}
             {n.file_url && (
-              <a href={n.file_url} target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+              <a
+                href={n.file_url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
                 <Download className="h-3 w-3" /> Open PDF
               </a>
             )}

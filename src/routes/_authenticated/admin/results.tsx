@@ -6,8 +6,20 @@ import { PageHeader, EmptyState } from "@/components/portal/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -53,11 +65,15 @@ function Page() {
               <tr key={r.id} className="border-t border-border">
                 <td className="p-3">
                   <div className="font-medium">{r.students?.full_name}</div>
-                  <div className="text-xs text-muted-foreground">Roll {r.students?.roll_number}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Roll {r.students?.roll_number}
+                  </div>
                 </td>
                 <td className="p-3">{r.exam_name}</td>
                 <td className="p-3">{r.subjects?.name ?? "—"}</td>
-                <td className="p-3 font-mono">{r.marks} / {r.max_marks}</td>
+                <td className="p-3 font-mono">
+                  {r.marks} / {r.max_marks}
+                </td>
                 <td className="p-3 text-xs text-muted-foreground">{r.exam_date}</td>
                 <td className="p-3 text-right">
                   <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
@@ -68,7 +84,9 @@ function Page() {
             ))}
           </tbody>
         </table>
-        {!data?.length && <EmptyState title="No results yet" hint="Click Add Result to record marks" />}
+        {!data?.length && (
+          <EmptyState title="No results yet" hint="Click Add Result to record marks" />
+        )}
       </div>
     </div>
   );
@@ -110,38 +128,83 @@ function NewResult({ onDone }: { onDone: () => void }) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Result</Button></DialogTrigger>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2 h-4 w-4" /> Add Result
+        </Button>
+      </DialogTrigger>
       <DialogContent>
-        <DialogHeader><DialogTitle>Record marks</DialogTitle></DialogHeader>
+        <DialogHeader>
+          <DialogTitle>Record marks</DialogTitle>
+        </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div>
             <Label>Student</Label>
-            <Select value={form.student_id} onValueChange={(v) => setForm({ ...form, student_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+            <Select
+              value={form.student_id}
+              onValueChange={(v) => setForm({ ...form, student_id: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select student" />
+              </SelectTrigger>
               <SelectContent>
                 {(students ?? []).map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.full_name} ({s.roll_number})</SelectItem>
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.full_name} ({s.roll_number})
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <Label>Exam type</Label>
-            <Select value={form.exam_name} onValueChange={(v) => setForm({ ...form, exam_name: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+            <Select
+              value={form.exam_name}
+              onValueChange={(v) => setForm({ ...form, exam_name: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
               <SelectContent>
                 {["midterm", "final", "internal", "practical", "assignment"].map((e) => (
-                  <SelectItem key={e} value={e}>{e}</SelectItem>
+                  <SelectItem key={e} value={e}>
+                    {e}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div><Label>Subject</Label><Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Marks</Label><Input type="number" value={form.marks} onChange={(e) => setForm({ ...form, marks: e.target.value })} required /></div>
-            <div><Label>Max marks</Label><Input type="number" value={form.max_marks} onChange={(e) => setForm({ ...form, max_marks: e.target.value })} required /></div>
+          <div>
+            <Label>Subject</Label>
+            <Input
+              value={form.subject}
+              onChange={(e) => setForm({ ...form, subject: e.target.value })}
+              required
+            />
           </div>
-          <Button type="submit" className="w-full">Save</Button>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label>Marks</Label>
+              <Input
+                type="number"
+                value={form.marks}
+                onChange={(e) => setForm({ ...form, marks: e.target.value })}
+                required
+              />
+            </div>
+            <div>
+              <Label>Max marks</Label>
+              <Input
+                type="number"
+                value={form.max_marks}
+                onChange={(e) => setForm({ ...form, max_marks: e.target.value })}
+                required
+              />
+            </div>
+          </div>
+          <Button type="submit" className="w-full">
+            Save
+          </Button>
         </form>
       </DialogContent>
     </Dialog>

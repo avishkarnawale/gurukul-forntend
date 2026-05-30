@@ -1,8 +1,16 @@
 import { cn } from "@/lib/utils";
 
 export function PageHeader({
-  title, subtitle, action, className,
-}: { title: string; subtitle?: string; action?: React.ReactNode; className?: string }) {
+  title,
+  subtitle,
+  action,
+  className,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: React.ReactNode;
+  className?: string;
+}) {
   return (
     <div className={cn("mb-6 flex flex-wrap items-end justify-between gap-3", className)}>
       <div>
@@ -15,23 +23,32 @@ export function PageHeader({
 }
 
 export function StatCard({
-  label, value, accent = "primary", icon: Icon, hint,
+  label,
+  value,
+  accent = "primary",
+  icon: Icon,
+  hint,
 }: {
-  label: string; value: string | number; hint?: string;
+  label: string;
+  value: string | number;
+  hint?: string;
   accent?: "primary" | "success" | "warning" | "muted";
   icon: React.ComponentType<{ className?: string }>;
 }) {
   const styles: Record<string, string> = {
     primary: "bg-primary-soft text-primary",
     success: "bg-[color-mix(in_oklab,var(--color-success)_18%,transparent)] text-success",
-    warning: "bg-[color-mix(in_oklab,var(--color-warning)_22%,transparent)] text-warning-foreground",
+    warning:
+      "bg-[color-mix(in_oklab,var(--color-warning)_22%,transparent)] text-warning-foreground",
     muted: "bg-muted text-muted-foreground",
   };
   return (
     <div className="stat-tile">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {label}
+          </p>
           <p className="mt-2 font-display text-3xl font-bold leading-none">{value}</p>
           {hint && <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p>}
         </div>

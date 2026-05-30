@@ -9,11 +9,7 @@ import {
 } from "@/lib/portal-api";
 import { useStudentNotificationPoller } from "@/hooks/use-student-notifications";
 import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 
@@ -72,7 +68,9 @@ export function StudentNotificationBell() {
         </div>
         <div className="max-h-72 overflow-y-auto">
           {!items.length && (
-            <p className="px-3 py-6 text-center text-sm text-muted-foreground">No notifications yet</p>
+            <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+              No notifications yet
+            </p>
           )}
           {items.map((n) => (
             <div
@@ -81,7 +79,11 @@ export function StudentNotificationBell() {
             >
               <div className="flex items-start justify-between gap-2">
                 <p className="text-sm font-medium leading-snug">{n.title}</p>
-                {!n.read && <Badge variant="secondary" className="shrink-0 text-[10px]">New</Badge>}
+                {!n.read && (
+                  <Badge variant="secondary" className="shrink-0 text-[10px]">
+                    New
+                  </Badge>
+                )}
               </div>
               {n.body && (
                 <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{n.body}</p>

@@ -58,12 +58,7 @@ function Page() {
         title={student.name}
         subtitle={`${student.rollNumber} · ${formatClassLabel(student.class)}`}
         action={
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleDownload}
-            disabled={downloading}
-          >
+          <Button size="sm" variant="outline" onClick={handleDownload} disabled={downloading}>
             {downloading ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -122,7 +117,9 @@ function Page() {
               {attendance.recent.slice(0, 5).map((r) => (
                 <div key={r.id} className="flex justify-between">
                   <span>{r.date}</span>
-                  <span className={r.status === "present" ? "text-emerald-600" : "text-destructive"}>
+                  <span
+                    className={r.status === "present" ? "text-emerald-600" : "text-destructive"}
+                  >
                     {r.status === "present" ? "Present" : "Absent"}
                   </span>
                 </div>
@@ -133,9 +130,7 @@ function Page() {
 
         <Card className="p-4">
           <h3 className="font-display text-sm font-semibold">Pending fees</h3>
-          <p className="mt-2 text-2xl font-bold">
-            ₹{fees.totalPending.toLocaleString("en-IN")}
-          </p>
+          <p className="mt-2 text-2xl font-bold">₹{fees.totalPending.toLocaleString("en-IN")}</p>
           {fees.items.length > 0 ? (
             <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
               {fees.items.slice(0, 3).map((f) => (
@@ -185,14 +180,9 @@ function Page() {
         )}
       </Card>
 
-      <Button
-        variant="ghost"
-        size="sm"
-        asChild
-      >
+      <Button variant="ghost" size="sm" asChild>
         <Link to="/admin/students">Back to students</Link>
       </Button>
     </div>
   );
 }
-

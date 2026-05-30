@@ -2,7 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { usePortalQuery } from "@/hooks/use-portal-query";
 import { fetchMyGrades } from "@/lib/portal-api";
 import { PageHeader, EmptyState, StatCard } from "@/components/portal/ui";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Trophy, TrendingUp } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -31,9 +37,15 @@ function Page() {
         <div className="card-elevated mb-4 max-w-xs p-4">
           <Label className="text-xs text-muted-foreground">Exam</Label>
           <Select value={activeExam} onValueChange={setExam}>
-            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+            <SelectTrigger className="mt-1">
+              <SelectValue />
+            </SelectTrigger>
             <SelectContent>
-              {exams.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+              {exams.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {e}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -45,7 +57,12 @@ function Page() {
       <div className="card-elevated mt-6 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
-            <tr><th className="p-3">Subject</th><th className="p-3">Marks</th><th className="p-3">Max</th><th className="p-3">Date</th></tr>
+            <tr>
+              <th className="p-3">Subject</th>
+              <th className="p-3">Marks</th>
+              <th className="p-3">Max</th>
+              <th className="p-3">Date</th>
+            </tr>
           </thead>
           <tbody>
             {filtered.map((r) => (

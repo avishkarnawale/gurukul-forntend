@@ -34,12 +34,24 @@ export const translations = {
     why: {
       title: "Why Choose Gurukul Classes",
       items: [
-        { t: "Expert faculty", d: "Subject specialists for Mathematics, Science, English and more." },
-        { t: "CBSE & SSC tracks", d: "Separate curriculum paths with board-focused notes and PYQs." },
+        {
+          t: "Expert faculty",
+          d: "Subject specialists for Mathematics, Science, English and more.",
+        },
+        {
+          t: "CBSE & SSC tracks",
+          d: "Separate curriculum paths with board-focused notes and PYQs.",
+        },
         { t: "Digital portal", d: "Attendance, homework, fees and results in one secure app." },
         { t: "Regular assessments", d: "Tests, progress reports and parent meetings each term." },
-        { t: "Safe environment", d: "Supportive classrooms that encourage questions and confidence." },
-        { t: "Affordable fees", d: "Transparent fee structure with downloadable payment receipts." },
+        {
+          t: "Safe environment",
+          d: "Supportive classrooms that encourage questions and confidence.",
+        },
+        {
+          t: "Affordable fees",
+          d: "Transparent fee structure with downloadable payment receipts.",
+        },
       ],
     },
     subjects: {
@@ -81,7 +93,8 @@ export const translations = {
     portals: {
       title: "Student & Staff Portals",
       studentTitle: "Student portal",
-      studentDesc: "Sign in with roll number and date of birth to view attendance, homework, fees and results.",
+      studentDesc:
+        "Sign in with roll number and date of birth to view attendance, homework, fees and results.",
       studentBtn: "Student login",
       staffTitle: "Staff & admin",
       staffDesc: "Teachers and office staff manage classes, marks, fees and announcements.",

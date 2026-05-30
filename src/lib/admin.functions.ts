@@ -22,14 +22,16 @@ async function assertAdmin(userId: string) {
 export const createStudent = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z.object({
-      full_name: z.string().min(2).max(120),
-      roll_number: z.string().min(1).max(40),
-      dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      class_id: z.string().uuid(),
-      parent_phone: z.string().max(20).optional().nullable(),
-      contact_email: z.string().email().max(255).optional().nullable(),
-    }).parse(input),
+    z
+      .object({
+        full_name: z.string().min(2).max(120),
+        roll_number: z.string().min(1).max(40),
+        dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        class_id: z.string().uuid(),
+        parent_phone: z.string().max(20).optional().nullable(),
+        contact_email: z.string().email().max(255).optional().nullable(),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);
@@ -92,14 +94,16 @@ export const deleteStudent = createServerFn({ method: "POST" })
 export const createStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) =>
-    z.object({
-      full_name: z.string().min(2).max(120),
-      email: z.string().email().max(255),
-      password: z.string().min(8).max(72),
-      phone: z.string().max(20).optional().nullable(),
-      designation: z.string().max(60).optional().nullable(),
-      role: z.enum(["staff", "admin"]).default("staff"),
-    }).parse(input),
+    z
+      .object({
+        full_name: z.string().min(2).max(120),
+        email: z.string().email().max(255),
+        password: z.string().min(8).max(72),
+        phone: z.string().max(20).optional().nullable(),
+        designation: z.string().max(60).optional().nullable(),
+        role: z.enum(["staff", "admin"]).default("staff"),
+      })
+      .parse(input),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context.userId);

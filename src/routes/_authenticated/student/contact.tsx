@@ -15,10 +15,7 @@ export const Route = createFileRoute("/_authenticated/student/contact")({
 
 function contactMessage(teacherName: string) {
   const u = getUser();
-  const parts = [
-    `Hello ${teacherName},`,
-    "I am a student at Gurukul Classes.",
-  ];
+  const parts = [`Hello ${teacherName},`, "I am a student at Gurukul Classes."];
   if (u?.name) parts.push(`Name: ${u.name}`);
   if (u?.rollNumber) parts.push(`Roll: ${u.rollNumber}`);
   if (u?.class) parts.push(`Class: ${formatClassLabel(u.class)}`);
@@ -40,7 +37,10 @@ function Page() {
       />
       <div className="space-y-4">
         {(data ?? []).map((c) => (
-          <div key={c.id} className="card-elevated flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div
+            key={c.id}
+            className="card-elevated flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between"
+          >
             <div className="flex gap-3">
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-primary/10 text-primary">
                 <UserCircle className="h-7 w-7" />
@@ -51,17 +51,13 @@ function Page() {
                   {c.isOwner && <Badge>Owner</Badge>}
                 </div>
                 <p className="text-sm text-muted-foreground">{c.roleLabel}</p>
-                {c.department && (
-                  <p className="text-xs text-muted-foreground">{c.department}</p>
-                )}
+                {c.department && <p className="text-xs text-muted-foreground">{c.department}</p>}
                 {c.subjects.length > 0 && (
                   <p className="mt-1 text-xs text-muted-foreground">
                     Subjects: {c.subjects.join(", ")}
                   </p>
                 )}
-                {c.phoneDisplay && (
-                  <p className="mt-1 text-sm font-medium">{c.phoneDisplay}</p>
-                )}
+                {c.phoneDisplay && <p className="mt-1 text-sm font-medium">{c.phoneDisplay}</p>}
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
@@ -90,7 +86,10 @@ function Page() {
           </div>
         ))}
         {!isLoading && !data?.length && (
-          <EmptyState title="No teachers listed" description="Ask admin to add staff profiles with phone numbers." />
+          <EmptyState
+            title="No teachers listed"
+            description="Ask admin to add staff profiles with phone numbers."
+          />
         )}
       </div>
     </div>

@@ -22,7 +22,7 @@ export const Route = createFileRoute("/api/auth/staff-login")({
         const supabase = createClient(
           process.env.SUPABASE_URL!,
           process.env.SUPABASE_PUBLISHABLE_KEY!,
-          { auth: { persistSession: false, autoRefreshToken: false } }
+          { auth: { persistSession: false, autoRefreshToken: false } },
         );
 
         const { data, error } = await supabase.auth.signInWithPassword(parsed);
@@ -40,7 +40,7 @@ export const Route = createFileRoute("/api/auth/staff-login")({
         if (!roleSet.has("admin") && !roleSet.has("staff")) {
           return Response.json(
             { error: "This account is not authorized for staff access" },
-            { status: 403 }
+            { status: 403 },
           );
         }
 

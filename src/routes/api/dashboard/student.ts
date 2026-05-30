@@ -44,7 +44,7 @@ export const Route = createFileRoute("/api/dashboard/student")({
         const pct = total ? Math.round((present / total) * 100) : 0;
         const due = (fees.data ?? []).reduce(
           (s, f: any) => s + (Number(f.total_amount) - Number(f.paid_amount)),
-          0
+          0,
         );
 
         return Response.json({

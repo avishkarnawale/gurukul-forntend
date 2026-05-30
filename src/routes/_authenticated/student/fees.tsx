@@ -24,13 +24,32 @@ function Page() {
   const receiptFees = fees.filter((f) => feeReceiptPayments(f).length > 0);
 
   return (
-    <QueryState loading={isLoading} error={isError ? (error as Error).message : null} onRetry={() => refetch()}>
+    <QueryState
+      loading={isLoading}
+      error={isError ? (error as Error).message : null}
+      onRetry={() => refetch()}
+    >
       <div className="mx-auto max-w-5xl">
         <PageHeader title="Fees" subtitle="Your fee summary, history, and payment receipts" />
         <div className="grid gap-4 md:grid-cols-3">
-          <StatCard label="Total" value={`₹${total.toLocaleString()}`} icon={Wallet} accent="primary" />
-          <StatCard label="Paid" value={`₹${paid.toLocaleString()}`} icon={CheckCircle2} accent="success" />
-          <StatCard label="Pending" value={`₹${due.toLocaleString()}`} icon={AlertCircle} accent="warning" />
+          <StatCard
+            label="Total"
+            value={`₹${total.toLocaleString()}`}
+            icon={Wallet}
+            accent="primary"
+          />
+          <StatCard
+            label="Paid"
+            value={`₹${paid.toLocaleString()}`}
+            icon={CheckCircle2}
+            accent="success"
+          />
+          <StatCard
+            label="Pending"
+            value={`₹${due.toLocaleString()}`}
+            icon={AlertCircle}
+            accent="warning"
+          />
         </div>
 
         {receiptFees.length > 0 && data?.student && (

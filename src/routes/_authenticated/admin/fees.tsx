@@ -57,9 +57,24 @@ function Page() {
         }
       />
       <div className="grid gap-4 md:grid-cols-3">
-        <StatCard label="Total" value={`₹${total.toLocaleString()}`} icon={Wallet} accent="primary" />
-        <StatCard label="Collected" value={`₹${paid.toLocaleString()}`} icon={CheckCircle2} accent="success" />
-        <StatCard label="Pending" value={`₹${(total - paid).toLocaleString()}`} icon={AlertCircle} accent="warning" />
+        <StatCard
+          label="Total"
+          value={`₹${total.toLocaleString()}`}
+          icon={Wallet}
+          accent="primary"
+        />
+        <StatCard
+          label="Collected"
+          value={`₹${paid.toLocaleString()}`}
+          icon={CheckCircle2}
+          accent="success"
+        />
+        <StatCard
+          label="Pending"
+          value={`₹${(total - paid).toLocaleString()}`}
+          icon={AlertCircle}
+          accent="warning"
+        />
       </div>
       <div className="card-elevated mt-6 overflow-hidden">
         <table className="w-full text-sm">
@@ -106,7 +121,15 @@ function Page() {
   );
 }
 
-function PaidEditor({ id, value, onSave }: { id: string; value: number; onSave: (id: string, v: number) => void }) {
+function PaidEditor({
+  id,
+  value,
+  onSave,
+}: {
+  id: string;
+  value: number;
+  onSave: (id: string, v: number) => void;
+}) {
   const [v, setV] = useState(value.toString());
   return (
     <div className="flex items-center gap-2">

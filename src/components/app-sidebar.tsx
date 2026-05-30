@@ -1,11 +1,30 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Calendar, BookOpen, Wallet, Bell, GraduationCap,
-  Users, ClipboardCheck, FileText, FileQuestion, Trophy, UserCog, MessageCircle,
+  LayoutDashboard,
+  Calendar,
+  BookOpen,
+  Wallet,
+  Bell,
+  GraduationCap,
+  Users,
+  ClipboardCheck,
+  FileText,
+  FileQuestion,
+  Trophy,
+  UserCog,
+  MessageCircle,
 } from "lucide-react";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
-  SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import type { AppRole } from "@/hooks/use-auth";
 
@@ -39,7 +58,8 @@ export function AppSidebar({ role }: { role: AppRole | null }) {
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (s) => s.location.pathname });
   const items = role === "student" ? studentItems : adminItems;
-  const label = role === "student" ? "Student Portal" : role === "staff" ? "Staff Portal" : "Admin Portal";
+  const label =
+    role === "student" ? "Student Portal" : role === "staff" ? "Staff Portal" : "Admin Portal";
 
   return (
     <Sidebar collapsible="icon">
@@ -51,7 +71,9 @@ export function AppSidebar({ role }: { role: AppRole | null }) {
           {!collapsed && (
             <div className="overflow-hidden">
               <p className="truncate font-display text-sm font-bold">Gurukul Classes</p>
-              <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="truncate text-[10px] uppercase tracking-wide text-muted-foreground">
+                {label}
+              </p>
             </div>
           )}
         </div>
@@ -62,9 +84,10 @@ export function AppSidebar({ role }: { role: AppRole | null }) {
           <SidebarGroupContent>
             <SidebarMenu>
               {items.map((it) => {
-                const active = it.url === "/student" || it.url === "/admin"
-                  ? path === it.url
-                  : path.startsWith(it.url);
+                const active =
+                  it.url === "/student" || it.url === "/admin"
+                    ? path === it.url
+                    : path.startsWith(it.url);
                 return (
                   <SidebarMenuItem key={it.title}>
                     <SidebarMenuButton asChild isActive={active}>

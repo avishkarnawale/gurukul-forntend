@@ -12,25 +12,33 @@ export const Route = createFileRoute("/api/public/bootstrap")({
           const adminEmail = "admin@gurukul.app";
           let adminId: string | null = null;
 
-          const { data: list } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 200 });
+          const { data: list } = await supabaseAdmin.auth.admin.listUsers({
+            page: 1,
+            perPage: 200,
+          });
           const existing = list?.users.find((u) => u.email === adminEmail);
           if (existing) {
             adminId = existing.id;
           } else {
             const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-              email: adminEmail, password: "admin12345", email_confirm: true,
+              email: adminEmail,
+              password: "admin12345",
+              email_confirm: true,
               user_metadata: { full_name: "Demo Admin" },
             });
             if (error) throw error;
             adminId = created.user!.id;
             await supabaseAdmin.from("staff").insert({
-              user_id: adminId, full_name: "Demo Admin", email: adminEmail, designation: "Principal",
+              user_id: adminId,
+              full_name: "Demo Admin",
+              email: adminEmail,
+              designation: "Principal",
             });
           }
           // Always ensure admin role
-          await supabaseAdmin.from("user_roles").upsert(
-            { user_id: adminId!, role: "admin" }, { onConflict: "user_id,role" },
-          );
+          await supabaseAdmin
+            .from("user_roles")
+            .upsert({ user_id: adminId!, role: "admin" }, { onConflict: "user_id,role" });
 
           // 2. Demo classes
           const classes = [
@@ -41,11 +49,19 @@ export const Route = createFileRoute("/api/public/bootstrap")({
           const classIds: Record<string, string> = {};
           for (const c of classes) {
             const { data: existing } = await supabaseAdmin
-              .from("classes").select("id").eq("name", c.name).eq("division", c.division).maybeSingle();
+              .from("classes")
+              .select("id")
+              .eq("name", c.name)
+              .eq("division", c.division)
+              .maybeSingle();
             if (existing) {
               classIds[`${c.name} ${c.division}`] = existing.id;
             } else {
-              const { data: ins } = await supabaseAdmin.from("classes").insert(c).select("id").single();
+              const { data: ins } = await supabaseAdmin
+                .from("classes")
+                .insert(c)
+                .select("id")
+                .single();
               classIds[`${c.name} ${c.division}`] = ins!.id;
             }
           }
@@ -60,7 +76,11 @@ export const Route = createFileRoute("/api/public/bootstrap")({
             const cid = classIds[ck];
             for (const name of subs) {
               const { data: ex } = await supabaseAdmin
-                .from("subjects").select("id").eq("class_id", cid).eq("name", name).maybeSingle();
+                .from("subjects")
+                .select("id")
+                .eq("class_id", cid)
+                .eq("name", name)
+                .maybeSingle();
               if (!ex) await supabaseAdmin.from("subjects").insert({ name, class_id: cid });
             }
           }
@@ -75,20 +95,25 @@ export const Route = createFileRoute("/api/public/bootstrap")({
             let uid = exists?.id;
             if (!uid) {
               const { data: c } = await supabaseAdmin.auth.admin.createUser({
-                email: t.email, password: "teacher123", email_confirm: true,
+                email: t.email,
+                password: "teacher123",
+                email_confirm: true,
                 user_metadata: { full_name: t.name },
               });
               uid = c?.user?.id;
               if (uid) {
                 await supabaseAdmin.from("staff").insert({
-                  user_id: uid, full_name: t.name, email: t.email, designation: t.desig,
+                  user_id: uid,
+                  full_name: t.name,
+                  email: t.email,
+                  designation: t.desig,
                 });
               }
             }
             if (uid) {
-              await supabaseAdmin.from("user_roles").upsert(
-                { user_id: uid, role: "staff" }, { onConflict: "user_id,role" },
-              );
+              await supabaseAdmin
+                .from("user_roles")
+                .upsert({ user_id: uid, role: "staff" }, { onConflict: "user_id,role" });
             }
           }
 
@@ -108,7 +133,9 @@ export const Route = createFileRoute("/api/public/bootstrap")({
             let uid = list?.users.find((u) => u.email === email)?.id;
             if (!uid) {
               const { data: c } = await supabaseAdmin.auth.admin.createUser({
-                email, password: s.dob, email_confirm: true,
+                email,
+                password: s.dob,
+                email_confirm: true,
                 user_metadata: { full_name: s.name, roll_number: s.roll },
               });
               uid = c?.user?.id;
@@ -116,18 +143,29 @@ export const Route = createFileRoute("/api/public/bootstrap")({
             if (!uid) continue;
 
             const { data: ex } = await supabaseAdmin
-              .from("students").select("id").eq("roll_number", s.roll).maybeSingle();
+              .from("students")
+              .select("id")
+              .eq("roll_number", s.roll)
+              .maybeSingle();
             let sid = ex?.id;
             if (!sid) {
-              const { data: ins } = await supabaseAdmin.from("students").insert({
-                user_id: uid, roll_number: s.roll, full_name: s.name, dob: s.dob,
-                class_id: class10, parent_phone: s.phone,
-              }).select("id").single();
+              const { data: ins } = await supabaseAdmin
+                .from("students")
+                .insert({
+                  user_id: uid,
+                  roll_number: s.roll,
+                  full_name: s.name,
+                  dob: s.dob,
+                  class_id: class10,
+                  parent_phone: s.phone,
+                })
+                .select("id")
+                .single();
               sid = ins?.id;
             }
-            await supabaseAdmin.from("user_roles").upsert(
-              { user_id: uid, role: "student" }, { onConflict: "user_id,role" },
-            );
+            await supabaseAdmin
+              .from("user_roles")
+              .upsert({ user_id: uid, role: "student" }, { onConflict: "user_id,role" });
             if (sid) studentIds.push({ id: sid, roll: s.roll });
           }
 
@@ -135,22 +173,32 @@ export const Route = createFileRoute("/api/public/bootstrap")({
           const today = new Date();
           for (const s of studentIds) {
             for (let i = 0; i < 14; i++) {
-              const d = new Date(today); d.setDate(today.getDate() - i);
+              const d = new Date(today);
+              d.setDate(today.getDate() - i);
               const dow = d.getDay();
               if (dow === 0) continue; // Sunday off
               const dateStr = d.toISOString().slice(0, 10);
               // 90% present
               const present = Math.random() > 0.1;
-              await supabaseAdmin.from("attendance").upsert(
-                { student_id: s.id, date: dateStr, status: present ? "present" : "absent", marked_by: adminId },
-                { onConflict: "student_id,date" },
-              );
+              await supabaseAdmin
+                .from("attendance")
+                .upsert(
+                  {
+                    student_id: s.id,
+                    date: dateStr,
+                    status: present ? "present" : "absent",
+                    marked_by: adminId,
+                  },
+                  { onConflict: "student_id,date" },
+                );
             }
           }
 
           // 7. Homework
           const { data: subs10 } = await supabaseAdmin
-            .from("subjects").select("id,name").eq("class_id", class10);
+            .from("subjects")
+            .select("id,name")
+            .eq("class_id", class10);
           const hwSeed = [
             { title: "Algebra Worksheet — Quadratics", subject: "Mathematics", days: 2 },
             { title: "Read Chapter 4: Carbon", subject: "Science", days: 4 },
@@ -160,43 +208,74 @@ export const Route = createFileRoute("/api/public/bootstrap")({
             const subj = subs10?.find((x) => x.name === h.subject);
             if (!subj) continue;
             const { data: ex } = await supabaseAdmin
-              .from("homework").select("id").eq("class_id", class10).eq("title", h.title).maybeSingle();
+              .from("homework")
+              .select("id")
+              .eq("class_id", class10)
+              .eq("title", h.title)
+              .maybeSingle();
             if (!ex) {
-              const due = new Date(today); due.setDate(today.getDate() + h.days);
+              const due = new Date(today);
+              due.setDate(today.getDate() + h.days);
               await supabaseAdmin.from("homework").insert({
-                class_id: class10, subject_id: subj.id, title: h.title,
+                class_id: class10,
+                subject_id: subj.id,
+                title: h.title,
                 description: "Complete the assignment and submit on or before the due date.",
-                due_date: due.toISOString().slice(0, 10), created_by: adminId,
+                due_date: due.toISOString().slice(0, 10),
+                created_by: adminId,
               });
             }
           }
 
           // 8. Fees
-          const dueDate = new Date(today); dueDate.setDate(today.getDate() + 14);
+          const dueDate = new Date(today);
+          dueDate.setDate(today.getDate() + 14);
           for (const s of studentIds) {
             const { data: ex } = await supabaseAdmin
-              .from("fees").select("id").eq("student_id", s.id).eq("term", "Q1 2026").maybeSingle();
+              .from("fees")
+              .select("id")
+              .eq("student_id", s.id)
+              .eq("term", "Q1 2026")
+              .maybeSingle();
             if (!ex) {
               const paid = Math.random() > 0.5 ? 7500 : Math.random() > 0.5 ? 3000 : 0;
               await supabaseAdmin.from("fees").insert({
-                student_id: s.id, term: "Q1 2026", total_amount: 7500,
-                paid_amount: paid, due_date: dueDate.toISOString().slice(0, 10),
+                student_id: s.id,
+                term: "Q1 2026",
+                total_amount: 7500,
+                paid_amount: paid,
+                due_date: dueDate.toISOString().slice(0, 10),
               });
             }
           }
 
           // 9. Notices
           const notices = [
-            { title: "Welcome to the new term!", content: "Classes resume on Monday. Stay punctual." },
-            { title: "Mid-term exam timetable", content: "Check the timetable section for your exam schedule.", pinned: true },
-            { title: "Parent-Teacher Meeting", content: "Saturday 10:00 AM in main hall.", target: class10 },
+            {
+              title: "Welcome to the new term!",
+              content: "Classes resume on Monday. Stay punctual.",
+            },
+            {
+              title: "Mid-term exam timetable",
+              content: "Check the timetable section for your exam schedule.",
+              pinned: true,
+            },
+            {
+              title: "Parent-Teacher Meeting",
+              content: "Saturday 10:00 AM in main hall.",
+              target: class10,
+            },
           ];
           for (const n of notices) {
             const { data: ex } = await supabaseAdmin
-              .from("notices").select("id").eq("title", n.title).maybeSingle();
+              .from("notices")
+              .select("id")
+              .eq("title", n.title)
+              .maybeSingle();
             if (!ex) {
               await supabaseAdmin.from("notices").insert({
-                title: n.title, content: n.content,
+                title: n.title,
+                content: n.content,
                 pinned: (n as any).pinned ?? false,
                 target_class_id: (n as any).target ?? null,
                 created_by: adminId,
@@ -213,7 +292,8 @@ export const Route = createFileRoute("/api/public/bootstrap")({
         } catch (e: any) {
           console.error("bootstrap error", e);
           return new Response(JSON.stringify({ ok: false, error: e.message ?? String(e) }), {
-            status: 500, headers: { "Content-Type": "application/json" },
+            status: 500,
+            headers: { "Content-Type": "application/json" },
           });
         }
       },

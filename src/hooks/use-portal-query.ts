@@ -7,7 +7,9 @@ export function usePortalQuery<TData>(options: UseQueryOptions<TData>) {
   const enabled = !loading && !!session && (options.enabled ?? true);
 
   const baseKey = options.queryKey ?? [];
-  const queryKey = user?.id ? [...(Array.isArray(baseKey) ? baseKey : [baseKey]), user.id] : baseKey;
+  const queryKey = user?.id
+    ? [...(Array.isArray(baseKey) ? baseKey : [baseKey]), user.id]
+    : baseKey;
 
   return useQuery({
     ...options,

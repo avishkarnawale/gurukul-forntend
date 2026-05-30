@@ -33,8 +33,13 @@ function LoginPage() {
           <span className="font-display text-lg font-bold">Gurukul Classes</span>
         </Link>
         <div>
-          <h1 className="font-display text-4xl font-bold leading-tight">Welcome back to your premium learning portal.</h1>
-          <p className="mt-4 max-w-md text-white/85">Track attendance, fees, homework and results — all in one beautifully designed dashboard.</p>
+          <h1 className="font-display text-4xl font-bold leading-tight">
+            Welcome back to your premium learning portal.
+          </h1>
+          <p className="mt-4 max-w-md text-white/85">
+            Track attendance, fees, homework and results — all in one beautifully designed
+            dashboard.
+          </p>
         </div>
         <p className="text-sm text-white/70">© {new Date().getFullYear()} Gurukul Classes</p>
       </div>
@@ -56,8 +61,12 @@ function LoginPage() {
               <TabsTrigger value="staff">Staff / Admin</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="student" className="mt-6"><StudentForm /></TabsContent>
-            <TabsContent value="staff" className="mt-6"><StaffForm /></TabsContent>
+            <TabsContent value="student" className="mt-6">
+              <StudentForm />
+            </TabsContent>
+            <TabsContent value="staff" className="mt-6">
+              <StaffForm />
+            </TabsContent>
           </Tabs>
         </div>
       </div>
@@ -90,12 +99,20 @@ function StudentForm() {
     <form onSubmit={submit} className="space-y-4">
       <div>
         <Label htmlFor="roll">Roll Number</Label>
-        <Input id="roll" placeholder="e.g. GK001" value={roll} onChange={(e) => setRoll(e.target.value)} required />
+        <Input
+          id="roll"
+          placeholder="e.g. GK001"
+          value={roll}
+          onChange={(e) => setRoll(e.target.value)}
+          required
+        />
       </div>
       <div>
         <Label htmlFor="dob">Date of Birth (password)</Label>
         <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} required />
-        <p className="mt-1 text-xs text-muted-foreground">Use YYYY-MM-DD format — your DOB is your default password.</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Use YYYY-MM-DD format — your DOB is your default password.
+        </p>
       </div>
       <Button type="submit" className="w-full" disabled={busy}>
         {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -131,11 +148,25 @@ function StaffForm() {
     <form onSubmit={submit} className="space-y-4">
       <div>
         <Label htmlFor="email">Email</Label>
-        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+        <Input
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoComplete="email"
+        />
       </div>
       <div>
         <Label htmlFor="password">Password</Label>
-        <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required autoComplete="current-password" />
+        <Input
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          autoComplete="current-password"
+        />
       </div>
       <Button type="submit" className="w-full" disabled={busy}>
         {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
