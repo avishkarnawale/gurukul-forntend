@@ -20,4 +20,22 @@ export default defineConfig({
     server: { entry: "server" },
     ...(isBuild ? { spa: { enabled: true } } : {}),
   },
+  // Split the big vendor bundle into separate, long-term-cacheable chunks so the
+  // browser downloads them in parallel and reuses them across page loads/deploys.
+  vite: {
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (!id.includes("node_modules")) return;
+            if (id.includes("recharts") || id.includes("d3-") || id.includes("victory-vendor")) return "vendor-charts";
+            if (id.includes("@radix-ui")) return "vendor-radix";
+            if (id.includes("lucide-react")) return "vendor-icons";
+            if (id.includes("@tanstack")) return "vendor-tanstack";
+            if (id.includes("react-dom") || id.includes("/scheduler/")) return "vendor-react";
+          },
+        },
+      },
+    },
+  },
 });
