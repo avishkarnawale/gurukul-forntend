@@ -252,6 +252,7 @@ export async function createStudent(input: {
   dob: string;
   class_id: string;
   parent_phone?: string | null;
+  fee_amount?: number | null;
 }) {
   await apiFetch("/api/users", {
     method: "POST",
@@ -262,6 +263,7 @@ export async function createStudent(input: {
       dateOfBirth: input.dob,
       class: input.class_id,
       parentPhone: input.parent_phone || undefined,
+      feeAmount: input.fee_amount && input.fee_amount > 0 ? input.fee_amount : undefined,
     }),
   });
 }
@@ -484,6 +486,34 @@ export async function updateFeePaid(id: string, paid_amount: number) {
   await apiFetch(`/api/fees/${id}`, {
     method: "PUT",
     body: JSON.stringify({ paid_amount }),
+  });
+}
+
+export async function updateFeeTotal(id: string, total_amount: number) {
+  await apiFetch(`/api/fees/${id}`, {
+    method: "PUT",
+    body: JSON.stringify({ totalAmount: total_amount }),
+  });
+}
+
+// Create a fee for a single student (used to add a fee to a student who has none).
+export async function createFeeForStudent(input: {
+  student_id: string;
+  total_amount: number;
+  term?: string;
+  due_date?: string;
+  description?: string;
+}) {
+  await apiFetch("/api/fees", {
+    method: "POST",
+    body: JSON.stringify({
+      student: input.student_id,
+      totalAmount: input.total_amount,
+      term: input.term || "Term 1 2025-26",
+      dueDate: input.due_date,
+      description: input.description || "Tuition Fee",
+      payments: [],
+    }),
   });
 }
 

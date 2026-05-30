@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Trash2, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { useAuth, primaryRole } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin/students/")({
   component: Page,
@@ -19,6 +20,8 @@ export const Route = createFileRoute("/_authenticated/admin/students/")({
 function Page() {
   const [q, setQ] = useState("");
   const qc = useQueryClient();
+  const { roles } = useAuth();
+  const isAdmin = primaryRole(roles) === "admin";
 
   const { data: students } = usePortalQuery({ queryKey: ["admin-students"], queryFn: fetchStudents });
   const { data: classes } = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
@@ -46,7 +49,7 @@ function Page() {
       <PageHeader
         title="Students"
         subtitle={`${students?.length ?? 0} students enrolled`}
-        action={<AddStudentDialog classes={classes ?? []} onCreated={() => qc.invalidateQueries({ queryKey: ["admin-students"] })} />}
+        action={isAdmin ? <AddStudentDialog classes={classes ?? []} onCreated={() => qc.invalidateQueries({ queryKey: ["admin-students"] })} /> : undefined}
       />
       <div className="card-elevated mb-4 flex items-center gap-3 p-3">
         <Search className="ml-1 h-4 w-4 text-muted-foreground" />
@@ -71,9 +74,11 @@ function Page() {
                       View
                     </Link>
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => handleDelete(s.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
+                  {isAdmin && (
+                    <Button size="sm" variant="ghost" onClick={() => handleDelete(s.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  )}
                 </td>
               </tr>
             ))}
@@ -87,16 +92,23 @@ function Page() {
 
 function AddStudentDialog({ classes, onCreated }: { classes: Array<{ id: string; name: string }>; onCreated: () => void }) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ full_name: "", roll_number: "", dob: "", class_id: "", parent_phone: "" });
+  const [form, setForm] = useState({ full_name: "", roll_number: "", dob: "", class_id: "", parent_phone: "", fee_amount: "" });
   const [busy, setBusy] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     try {
-      await createStudent({ ...form, parent_phone: form.parent_phone || null });
+      await createStudent({
+        full_name: form.full_name,
+        roll_number: form.roll_number,
+        dob: form.dob,
+        class_id: form.class_id,
+        parent_phone: form.parent_phone || null,
+        fee_amount: form.fee_amount ? Number(form.fee_amount) : null,
+      });
       toast.success("Student added");
-      setForm({ full_name: "", roll_number: "", dob: "", class_id: "", parent_phone: "" });
+      setForm({ full_name: "", roll_number: "", dob: "", class_id: "", parent_phone: "", fee_amount: "" });
       setOpen(false);
       onCreated();
     } catch (e: unknown) {
@@ -126,8 +138,11 @@ function AddStudentDialog({ classes, onCreated }: { classes: Array<{ id: string;
               </SelectContent>
             </Select>
           </div>
-          <div><Label>Parent phone</Label><Input value={form.parent_phone} onChange={(e) => setForm({ ...form, parent_phone: e.target.value })} /></div>
-          <p className="text-xs text-muted-foreground">Student&apos;s default password will be their DOB (YYYY-MM-DD).</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>Parent phone</Label><Input value={form.parent_phone} onChange={(e) => setForm({ ...form, parent_phone: e.target.value })} /></div>
+            <div><Label>Fee amount (₹)</Label><Input type="number" min="0" placeholder="e.g. 8000" value={form.fee_amount} onChange={(e) => setForm({ ...form, fee_amount: e.target.value })} /></div>
+          </div>
+          <p className="text-xs text-muted-foreground">Set the fee for this student&apos;s standard. Leave blank to add it later from the Fees page. Default password is their DOB (YYYY-MM-DD).</p>
           <Button type="submit" className="w-full" disabled={busy}>Add Student</Button>
         </form>
       </DialogContent>

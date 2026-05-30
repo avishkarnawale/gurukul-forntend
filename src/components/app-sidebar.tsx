@@ -34,11 +34,23 @@ const adminItems = [
   { title: "Notices", url: "/admin/notices", icon: Bell },
 ];
 
+// Teachers (staff) get operational tools only — no Teachers management, no Fees.
+const staffItems = [
+  { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
+  { title: "Students", url: "/admin/students", icon: Users },
+  { title: "Attendance", url: "/admin/attendance", icon: ClipboardCheck },
+  { title: "Homework", url: "/admin/homework", icon: BookOpen },
+  { title: "Notes", url: "/admin/notes", icon: FileText },
+  { title: "PYQs", url: "/admin/pyqs", icon: FileQuestion },
+  { title: "Results", url: "/admin/results", icon: Trophy },
+  { title: "Notices", url: "/admin/notices", icon: Bell },
+];
+
 export function AppSidebar({ role }: { role: AppRole | null }) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const path = useRouterState({ select: (s) => s.location.pathname });
-  const items = role === "student" ? studentItems : adminItems;
+  const items = role === "student" ? studentItems : role === "staff" ? staffItems : adminItems;
   const label = role === "student" ? "Student Portal" : role === "staff" ? "Staff Portal" : "Admin Portal";
 
   return (

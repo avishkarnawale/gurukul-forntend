@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Download, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth, primaryRole } from "@/hooks/use-auth";
 
 export const Route = createFileRoute("/_authenticated/admin/students/$id")({
   component: Page,
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/_authenticated/admin/students/$id")({
 
 function Page() {
   const params = Route.useParams();
+  const { roles } = useAuth();
+  const isAdmin = primaryRole(roles) === "admin";
   const [downloading, setDownloading] = useState(false);
   const { data, isLoading, error } = usePortalQuery({
     queryKey: ["admin-student-summary", params.id],
@@ -58,23 +61,25 @@ function Page() {
         title={student.name}
         subtitle={`${student.rollNumber} · ${formatClassLabel(student.class)}`}
         action={
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleDownload}
-            disabled={downloading}
-          >
-            {downloading ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Download className="mr-2 h-4 w-4" />
-            )}
-            Download PDF
-          </Button>
+          isAdmin ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleDownload}
+              disabled={downloading}
+            >
+              {downloading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Download className="mr-2 h-4 w-4" />
+              )}
+              Download PDF
+            </Button>
+          ) : undefined
         }
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className={`grid gap-4 ${isAdmin ? "md:grid-cols-3" : "md:grid-cols-2"}`}>
         <Card className="p-4">
           <h3 className="font-display text-sm font-semibold">Profile</h3>
           <dl className="mt-2 space-y-1 text-xs text-muted-foreground">
@@ -131,24 +136,26 @@ function Page() {
           )}
         </Card>
 
-        <Card className="p-4">
-          <h3 className="font-display text-sm font-semibold">Pending fees</h3>
-          <p className="mt-2 text-2xl font-bold">
-            ₹{fees.totalPending.toLocaleString("en-IN")}
-          </p>
-          {fees.items.length > 0 ? (
-            <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
-              {fees.items.slice(0, 3).map((f) => (
-                <li key={f.id}>
-                  <span className="font-medium text-foreground">{f.term}</span> — Pending ₹
-                  {f.pendingAmount.toLocaleString("en-IN")}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-2 text-xs text-muted-foreground">No fee records.</p>
-          )}
-        </Card>
+        {isAdmin && (
+          <Card className="p-4">
+            <h3 className="font-display text-sm font-semibold">Pending fees</h3>
+            <p className="mt-2 text-2xl font-bold">
+              ₹{fees.totalPending.toLocaleString("en-IN")}
+            </p>
+            {fees.items.length > 0 ? (
+              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                {fees.items.slice(0, 3).map((f) => (
+                  <li key={f.id}>
+                    <span className="font-medium text-foreground">{f.term}</span> — Pending ₹
+                    {f.pendingAmount.toLocaleString("en-IN")}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-2 text-xs text-muted-foreground">No fee records.</p>
+            )}
+          </Card>
+        )}
       </div>
 
       <Card className="p-4">

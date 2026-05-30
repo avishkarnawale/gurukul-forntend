@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortalQuery } from "@/hooks/use-portal-query";
-import { assignMissingFees, fetchAllFees, updateFeePaid } from "@/lib/portal-api";
+import { assignMissingFees, fetchAllFees, updateFeePaid, updateFeeTotal } from "@/lib/portal-api";
 import { PageHeader, EmptyState, StatCard } from "@/components/portal/ui";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ function Page() {
   const qc = useQueryClient();
   const { data, refetch } = usePortalQuery({ queryKey: ["admin-fees"], queryFn: fetchAllFees });
   const [assigning, setAssigning] = useState(false);
+  const [assignAmount, setAssignAmount] = useState("");
 
   const total = (data ?? []).reduce((s, f) => s + Number(f.total_amount), 0);
   const paid = (data ?? []).reduce((s, f) => s + Number(f.paid_amount), 0);
@@ -30,11 +31,28 @@ function Page() {
     }
   };
 
+  const updateTotal = async (id: string, val: number) => {
+    try {
+      await updateFeeTotal(id, val);
+      toast.success("Fee amount updated");
+      qc.invalidateQueries({ queryKey: ["admin-fees"] });
+      qc.invalidateQueries({ queryKey: ["my-fees"] });
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Update failed");
+    }
+  };
+
   const assignMissing = async () => {
+    const amount = Number(assignAmount);
+    if (!amount || amount <= 0) {
+      toast.error("Enter a fee amount first");
+      return;
+    }
     setAssigning(true);
     try {
-      const res = await assignMissingFees();
+      const res = await assignMissingFees({ total_amount: amount });
       toast.success(res.message || `Created ${res.count} fee records`);
+      setAssignAmount("");
       await refetch();
       qc.invalidateQueries({ queryKey: ["my-fees"] });
     } catch (e: unknown) {
@@ -48,12 +66,22 @@ function Page() {
     <div className="mx-auto max-w-6xl">
       <PageHeader
         title="Fees"
-        subtitle="New students get a fee record automatically. Use assign for older students."
+        subtitle="Set each student's fee by their standard. Edit a total inline, or batch-assign an amount to students without a fee."
         action={
-          <Button variant="outline" disabled={assigning} onClick={assignMissing}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            {assigning ? "Working…" : "Assign fees to missing students"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min="0"
+              placeholder="Amount ₹"
+              value={assignAmount}
+              onChange={(e) => setAssignAmount(e.target.value)}
+              className="h-9 w-28"
+            />
+            <Button variant="outline" disabled={assigning} onClick={assignMissing}>
+              <UserPlus className="mr-2 h-4 w-4" />
+              {assigning ? "Working…" : "Assign to students without fees"}
+            </Button>
+          </div>
         }
       />
       <div className="grid gap-4 md:grid-cols-3">
@@ -80,9 +108,11 @@ function Page() {
                   <div className="text-xs text-muted-foreground">{f.students?.roll_number}</div>
                 </td>
                 <td className="p-3">{f.term}</td>
-                <td className="p-3">₹{Number(f.total_amount).toLocaleString()}</td>
                 <td className="p-3">
-                  <PaidEditor id={f.id} value={Number(f.paid_amount)} onSave={updatePaid} />
+                  <PaidEditor id={f.id} value={Number(f.total_amount)} onSave={updateTotal} prefix="₹" />
+                </td>
+                <td className="p-3">
+                  <PaidEditor id={f.id} value={Number(f.paid_amount)} onSave={updatePaid} prefix="₹" />
                 </td>
                 <td className="p-3">
                   <span
@@ -98,7 +128,7 @@ function Page() {
         {!data?.length && (
           <EmptyState
             title="No fee records"
-            hint='Click "Assign fees to missing students" or add a new student (fee is created automatically).'
+            hint='Enter an amount and click "Assign to students without fees", or set a fee amount when adding a student.'
           />
         )}
       </div>
@@ -106,11 +136,12 @@ function Page() {
   );
 }
 
-function PaidEditor({ id, value, onSave }: { id: string; value: number; onSave: (id: string, v: number) => void }) {
+function PaidEditor({ id, value, onSave, prefix }: { id: string; value: number; onSave: (id: string, v: number) => void; prefix?: string }) {
   const [v, setV] = useState(value.toString());
   return (
-    <div className="flex items-center gap-2">
-      <Input type="number" value={v} onChange={(e) => setV(e.target.value)} className="h-8 w-28" />
+    <div className="flex items-center gap-1">
+      {prefix && <span className="text-xs text-muted-foreground">{prefix}</span>}
+      <Input type="number" min="0" value={v} onChange={(e) => setV(e.target.value)} className="h-8 w-24" />
       <Button size="sm" variant="outline" onClick={() => onSave(id, Number(v))}>
         Save
       </Button>

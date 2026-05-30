@@ -28,6 +28,10 @@ function AuthedLayout() {
     // Redirect students away from /admin and vice versa
     if (path.startsWith("/admin") && role === "student") navigate({ to: "/student" });
     if (path.startsWith("/student") && (role === "admin" || role === "staff")) navigate({ to: "/admin" });
+    // Teachers (staff) cannot access Fees or Teacher-management pages.
+    if (role === "staff" && (path.startsWith("/admin/fees") || path.startsWith("/admin/teachers"))) {
+      navigate({ to: "/admin" });
+    }
   }, [path, role, loading, session, navigate]);
 
   if (loading || !session) {
