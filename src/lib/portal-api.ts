@@ -509,8 +509,9 @@ export function feeReceiptPayments(fee: StudentFee): FeePayment[] {
   return [];
 }
 
-export async function fetchAllFees() {
-  const body = await apiFetch<ApiList<Record<string, unknown>>>("/api/fees");
+export async function fetchAllFees(className?: string) {
+  const qs = className ? `?class=${encodeURIComponent(className)}` : "";
+  const body = await apiFetch<ApiList<Record<string, unknown>>>(`/api/fees${qs}`);
   return list(body).map(mapFee);
 }
 
@@ -553,6 +554,7 @@ export async function assignMissingFees(input?: {
   term?: string;
   total_amount?: number;
   due_date?: string;
+  class_id?: string;
 }) {
   return apiFetch<{ count: number; message: string }>("/api/fees/assign-missing", {
     method: "POST",
@@ -560,6 +562,7 @@ export async function assignMissingFees(input?: {
       term: input?.term,
       totalAmount: input?.total_amount,
       dueDate: input?.due_date,
+      class: input?.class_id,
     }),
   });
 }
