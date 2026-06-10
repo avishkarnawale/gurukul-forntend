@@ -721,6 +721,7 @@ function normalizeExamType(name: string) {
 
 export async function createGrade(input: {
   student_id: string;
+  class_id?: string;
   subject: string;
   exam_name: string;
   marks: number;
@@ -730,6 +731,7 @@ export async function createGrade(input: {
     method: "POST",
     body: JSON.stringify({
       student: input.student_id,
+      class: input.class_id,
       subject: input.subject,
       examType: normalizeExamType(input.exam_name),
       marksObtained: input.marks,

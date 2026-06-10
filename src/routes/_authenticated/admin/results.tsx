@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortalQuery } from "@/hooks/use-portal-query";
-import { createGrade, deleteGrade, fetchAllGrades, fetchStudents } from "@/lib/portal-api";
+import { createGrade, deleteGrade, fetchAllGrades, fetchClasses, fetchStudentsByClass } from "@/lib/portal-api";
 import { PageHeader, EmptyState } from "@/components/portal/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/_authenticated/admin/results")({ component: Page });
@@ -75,26 +75,63 @@ function Page() {
 }
 
 function NewResult({ onDone }: { onDone: () => void }) {
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({
+  const emptyForm = {
+    class_id: "",
     student_id: "",
     exam_name: "midterm",
     subject: "",
     marks: "",
     max_marks: "50",
-  });
+  };
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState(emptyForm);
 
-  const { data: students } = usePortalQuery({
-    queryKey: ["all-students-select"],
-    queryFn: fetchStudents,
+  const { data: classes } = usePortalQuery({
+    queryKey: ["classes"],
+    queryFn: fetchClasses,
     enabled: open,
   });
 
+  const { data: students, isLoading: studentsLoading } = usePortalQuery({
+    queryKey: ["students-by-class", form.class_id],
+    queryFn: () => fetchStudentsByClass(form.class_id),
+    enabled: open && !!form.class_id,
+  });
+
+  useEffect(() => {
+    if (!open || form.class_id || !classes?.length) return;
+    const withStudents = classes.find((c) => (c.studentCount ?? 0) > 0);
+    setForm((f) => ({ ...f, class_id: withStudents?.id ?? classes[0].id }));
+  }, [open, classes, form.class_id]);
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) setForm(emptyForm);
+  };
+
+  const onClassChange = (classId: string) => {
+    setForm((f) => ({ ...f, class_id: classId, student_id: "" }));
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!form.class_id) {
+      toast.error("Please select a class first.");
+      return;
+    }
+    if (!form.student_id) {
+      toast.error("Please select a student from this class.");
+      return;
+    }
+    const inClass = (students ?? []).some((s) => s.id === form.student_id);
+    if (!inClass) {
+      toast.error("Selected student is not in this class.");
+      return;
+    }
     try {
       await createGrade({
         student_id: form.student_id,
+        class_id: form.class_id,
         exam_name: form.exam_name,
         subject: form.subject,
         marks: Number(form.marks),
@@ -102,28 +139,68 @@ function NewResult({ onDone }: { onDone: () => void }) {
       });
       toast.success("Result saved");
       onDone();
+      setForm(emptyForm);
       setOpen(false);
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
   };
 
+  const selectedClass = classes?.find((c) => c.id === form.class_id);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Result</Button></DialogTrigger>
       <DialogContent>
         <DialogHeader><DialogTitle>Record marks</DialogTitle></DialogHeader>
         <form onSubmit={submit} className="space-y-3">
           <div>
+            <Label>Class</Label>
+            <Select value={form.class_id} onValueChange={onClassChange}>
+              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
+              <SelectContent>
+                {(classes ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} ({c.studentCount ?? 0} students)
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Only students enrolled in this class can receive marks.
+            </p>
+          </div>
+          <div>
             <Label>Student</Label>
-            <Select value={form.student_id} onValueChange={(v) => setForm({ ...form, student_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Select student" /></SelectTrigger>
+            <Select
+              value={form.student_id}
+              onValueChange={(v) => setForm({ ...form, student_id: v })}
+              disabled={!form.class_id || studentsLoading}
+            >
+              <SelectTrigger>
+                <SelectValue
+                  placeholder={
+                    !form.class_id
+                      ? "Select class first"
+                      : studentsLoading
+                        ? "Loading students…"
+                        : (students ?? []).length
+                          ? "Select student"
+                          : "No students in this class"
+                  }
+                />
+              </SelectTrigger>
               <SelectContent>
                 {(students ?? []).map((s) => (
                   <SelectItem key={s.id} value={s.id}>{s.full_name} ({s.roll_number})</SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            {form.class_id && !studentsLoading && !(students ?? []).length && (
+              <p className="mt-1 text-xs text-destructive">
+                No students in {selectedClass?.name ?? "this class"}. Add students first.
+              </p>
+            )}
           </div>
           <div>
             <Label>Exam type</Label>
