@@ -18,6 +18,10 @@ function Page() {
   const [className, setClassName] = useState<string | undefined>();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
   const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
+
+  useEffect(() => {
+    setMonth(date.slice(0, 7));
+  }, [date]);
   const [saving, setSaving] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
 
@@ -128,7 +132,12 @@ function Page() {
           </div>
           <div>
             <p className="mb-1 text-xs font-medium text-muted-foreground">Month (for PDF)</p>
-            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+            <Input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value)}
+              title="Matches the date above by default; change only to download a different month"
+            />
           </div>
         </div>
         <div className="card-elevated overflow-hidden">
