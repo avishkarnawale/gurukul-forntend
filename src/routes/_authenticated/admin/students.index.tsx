@@ -2,14 +2,15 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortalQuery } from "@/hooks/use-portal-query";
 import { createStudent, deleteStudent, fetchClasses, fetchStudents } from "@/lib/portal-api";
-import { PageHeader, EmptyState } from "@/components/portal/ui";
+import { downloadClassStudentsPdf } from "@/lib/fee-receipt";
+import { PageHeader, EmptyState, QueryState } from "@/components/portal/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Trash2, Plus, Search } from "lucide-react";
-import { useState } from "react";
+import { Trash2, Plus, Search, Download, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { useAuth, primaryRole } from "@/hooks/use-auth";
 
@@ -19,12 +20,29 @@ export const Route = createFileRoute("/_authenticated/admin/students/")({
 
 function Page() {
   const [q, setQ] = useState("");
+  const [className, setClassName] = useState<string | undefined>();
+  const [downloading, setDownloading] = useState(false);
   const qc = useQueryClient();
   const { roles } = useAuth();
   const isAdmin = primaryRole(roles) === "admin";
 
-  const { data: students } = usePortalQuery({ queryKey: ["admin-students"], queryFn: fetchStudents });
-  const { data: classes } = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
+  const classesQ = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
+
+  useEffect(() => {
+    if (!className && classesQ.data?.length) {
+      const withStudents = classesQ.data.find((c) => (c.studentCount ?? 0) > 0);
+      setClassName(withStudents?.id ?? classesQ.data[0].id);
+    }
+  }, [classesQ.data, className]);
+
+  const studentsQ = usePortalQuery({
+    enabled: !!className,
+    queryKey: ["admin-students", className],
+    queryFn: () => fetchStudents(className!),
+  });
+
+  const students = studentsQ.data;
+  const selectedClass = classesQ.data?.find((c) => c.id === className);
 
   const filtered = (students ?? []).filter(
     (s) =>
@@ -44,49 +62,137 @@ function Page() {
     }
   };
 
+  const downloadPdf = async () => {
+    if (!className) {
+      toast.error("Select a class first");
+      return;
+    }
+    setDownloading(true);
+    try {
+      await downloadClassStudentsPdf(className);
+      toast.success("Student list PDF downloaded (DOB not included)");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const err = classesQ.isError
+    ? (classesQ.error as Error).message
+    : studentsQ.isError
+      ? (studentsQ.error as Error).message
+      : null;
+
   return (
-    <div className="mx-auto max-w-7xl">
-      <PageHeader
-        title="Students"
-        subtitle={`${students?.length ?? 0} students enrolled`}
-        action={isAdmin ? <AddStudentDialog classes={classes ?? []} onCreated={() => qc.invalidateQueries({ queryKey: ["admin-students"] })} /> : undefined}
-      />
-      <div className="card-elevated mb-4 flex items-center gap-3 p-3">
-        <Search className="ml-1 h-4 w-4 text-muted-foreground" />
-        <Input placeholder="Search by name or roll number" value={q} onChange={(e) => setQ(e.target.value)} className="border-none shadow-none focus-visible:ring-0" />
+    <QueryState
+      loading={classesQ.isLoading}
+      error={err}
+      onRetry={() => {
+        classesQ.refetch();
+        studentsQ.refetch();
+      }}
+    >
+      <div className="mx-auto max-w-7xl">
+        <PageHeader
+          title="Students"
+          subtitle={
+            selectedClass
+              ? `${filtered.length} students in ${selectedClass.name}`
+              : "Select a class to view students"
+          }
+          action={
+            <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" disabled={!className || downloading} onClick={downloadPdf}>
+                {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Download PDF
+              </Button>
+              {isAdmin ? (
+                <AddStudentDialog
+                  classes={classesQ.data ?? []}
+                  onCreated={() => qc.invalidateQueries({ queryKey: ["admin-students"] })}
+                />
+              ) : undefined}
+            </div>
+          }
+        />
+
+        <div className="card-elevated mb-4 flex flex-wrap items-center gap-3 p-3">
+          <div className="min-w-[200px] flex-1">
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Class</p>
+            <Select value={className} onValueChange={setClassName}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select class" />
+              </SelectTrigger>
+              <SelectContent>
+                {(classesQ.data ?? []).map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name} ({c.studentCount ?? 0})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-1 items-center gap-3">
+            <Search className="h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or roll number"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="border-none shadow-none focus-visible:ring-0"
+            />
+          </div>
+        </div>
+
+        <div className="card-elevated overflow-hidden">
+          {studentsQ.isLoading ? (
+            <p className="p-6 text-sm text-muted-foreground">Loading students…</p>
+          ) : (
+            <>
+              <table className="w-full text-sm">
+                <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="p-3">Roll</th>
+                    <th className="p-3">Name</th>
+                    <th className="p-3">Class</th>
+                    <th className="p-3">Parent Phone</th>
+                    <th className="p-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filtered.map((s) => (
+                    <tr key={s.id} className="border-t border-border">
+                      <td className="p-3 font-mono text-xs font-semibold">{s.roll_number}</td>
+                      <td className="p-3 font-medium">{s.full_name}</td>
+                      <td className="p-3">{s.classes ? `${s.classes.name}` : "—"}</td>
+                      <td className="p-3">{s.parent_phone ?? "—"}</td>
+                      <td className="p-3 space-x-1 text-right">
+                        <Button size="sm" variant="outline" asChild>
+                          <Link to="/admin/students/$id" params={{ id: s.id }}>
+                            View
+                          </Link>
+                        </Button>
+                        {isAdmin && (
+                          <Button size="sm" variant="ghost" onClick={() => handleDelete(s.id)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!filtered.length && (
+                <EmptyState
+                  title="No students in this class"
+                  hint={selectedClass ? `No students enrolled in ${selectedClass.name}.` : "Select a class above."}
+                />
+              )}
+            </>
+          )}
+        </div>
       </div>
-      <div className="card-elevated overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/60 text-left text-xs uppercase text-muted-foreground">
-            <tr><th className="p-3">Roll</th><th className="p-3">Name</th><th className="p-3">Class</th><th className="p-3">DOB</th><th className="p-3">Parent Phone</th><th className="p-3 text-right">Actions</th></tr>
-          </thead>
-          <tbody>
-            {filtered.map((s) => (
-              <tr key={s.id} className="border-t border-border">
-                <td className="p-3 font-mono text-xs font-semibold">{s.roll_number}</td>
-                <td className="p-3 font-medium">{s.full_name}</td>
-                <td className="p-3">{s.classes ? `${s.classes.name}` : "—"}</td>
-                <td className="p-3">{s.dob}</td>
-                <td className="p-3">{s.parent_phone ?? "—"}</td>
-                <td className="p-3 space-x-1 text-right">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link to="/admin/students/$id" params={{ id: s.id }}>
-                      View
-                    </Link>
-                  </Button>
-                  {isAdmin && (
-                    <Button size="sm" variant="ghost" onClick={() => handleDelete(s.id)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        {!filtered.length && <EmptyState title="No students found" />}
-      </div>
-    </div>
+    </QueryState>
   );
 }
 
@@ -142,7 +248,7 @@ function AddStudentDialog({ classes, onCreated }: { classes: Array<{ id: string;
             <div><Label>Parent phone</Label><Input value={form.parent_phone} onChange={(e) => setForm({ ...form, parent_phone: e.target.value })} /></div>
             <div><Label>Fee amount (₹)</Label><Input type="number" min="0" placeholder="e.g. 8000" value={form.fee_amount} onChange={(e) => setForm({ ...form, fee_amount: e.target.value })} /></div>
           </div>
-          <p className="text-xs text-muted-foreground">Set the fee for this student&apos;s standard. Leave blank to add it later from the Fees page. Default password is their DOB (YYYY-MM-DD).</p>
+          <p className="text-xs text-muted-foreground">DOB is used as the student login password and is not shown in exported PDFs.</p>
           <Button type="submit" className="w-full" disabled={busy}>Add Student</Button>
         </form>
       </DialogContent>

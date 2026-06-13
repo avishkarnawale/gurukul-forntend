@@ -143,8 +143,11 @@ export async function fetchClasses() {
 
 // ── Users ────────────────────────────────────────────────────────────────────
 
-export async function fetchStudents() {
-  const body = await apiFetch<ApiList<Record<string, unknown>>>("/api/users?role=student");
+export async function fetchStudents(className?: string) {
+  const qs = className
+    ? `?role=student&class=${encodeURIComponent(className)}`
+    : "?role=student";
+  const body = await apiFetch<ApiList<Record<string, unknown>>>(`/api/users${qs}`);
   return list(body).map((u) => ({
     id: idOf(u),
     full_name: String(u.name ?? ""),

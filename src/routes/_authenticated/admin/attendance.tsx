@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Check, X, Loader2 } from "lucide-react";
+import { Check, X, Loader2, Download } from "lucide-react";
+import { downloadMonthlyAttendancePdf } from "@/lib/fee-receipt";
 
 export const Route = createFileRoute("/_authenticated/admin/attendance")({ component: Page });
 
@@ -16,7 +17,9 @@ function Page() {
   const qc = useQueryClient();
   const [className, setClassName] = useState<string | undefined>();
   const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [month, setMonth] = useState(new Date().toISOString().slice(0, 7));
   const [saving, setSaving] = useState<string | null>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const classesQ = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
   useEffect(() => {
@@ -66,6 +69,22 @@ function Page() {
 
   const selected = classesQ.data?.find((c) => c.id === className);
 
+  const downloadPdf = async () => {
+    if (!className) {
+      toast.error("Select a class first");
+      return;
+    }
+    setDownloading(true);
+    try {
+      await downloadMonthlyAttendancePdf(className, month);
+      toast.success("Attendance PDF downloaded");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <QueryState
       loading={classesQ.isLoading}
@@ -77,7 +96,16 @@ function Page() {
       }}
     >
       <div className="mx-auto max-w-5xl">
-        <PageHeader title="Mark Attendance" subtitle="Select class (grade + board) that matches each student" />
+        <PageHeader
+          title="Mark Attendance"
+          subtitle="Select class (grade + board) that matches each student"
+          action={
+            <Button variant="outline" disabled={!className || downloading} onClick={downloadPdf}>
+              {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+              Download monthly PDF
+            </Button>
+          }
+        />
         <div className="card-elevated mb-4 flex flex-wrap items-end gap-3 p-4">
           <div className="min-w-[220px] flex-1">
             <p className="mb-1 text-xs font-medium text-muted-foreground">Class</p>
@@ -97,6 +125,10 @@ function Page() {
           <div>
             <p className="mb-1 text-xs font-medium text-muted-foreground">Date</p>
             <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div>
+            <p className="mb-1 text-xs font-medium text-muted-foreground">Month (for PDF)</p>
+            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
           </div>
         </div>
         <div className="card-elevated overflow-hidden">

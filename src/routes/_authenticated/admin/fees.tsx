@@ -6,7 +6,8 @@ import { PageHeader, EmptyState, StatCard, QueryState } from "@/components/porta
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Wallet, CheckCircle2, AlertCircle, UserPlus } from "lucide-react";
+import { Wallet, CheckCircle2, AlertCircle, UserPlus, Download, Loader2 } from "lucide-react";
+import { downloadClassFeesPdf } from "@/lib/fee-receipt";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -17,6 +18,7 @@ function Page() {
   const [className, setClassName] = useState<string | undefined>();
   const [assigning, setAssigning] = useState(false);
   const [assignAmount, setAssignAmount] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   const classesQ = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
 
@@ -88,6 +90,22 @@ function Page() {
     }
   };
 
+  const downloadPdf = async () => {
+    if (!className) {
+      toast.error("Select a class first");
+      return;
+    }
+    setDownloading(true);
+    try {
+      await downloadClassFeesPdf(className);
+      toast.success("Fees PDF downloaded");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const err = classesQ.isError
     ? (classesQ.error as Error).message
     : feesQ.isError
@@ -113,6 +131,10 @@ function Page() {
           }
           action={
             <div className="flex flex-wrap items-center gap-2">
+              <Button variant="outline" disabled={!className || downloading} onClick={downloadPdf}>
+                {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Download PDF
+              </Button>
               <Input
                 type="number"
                 min="0"
