@@ -781,6 +781,34 @@ export async function deleteGrade(id: string) {
   await apiFetch(`/api/results/${id}`, { method: "DELETE" });
 }
 
+// ── Academic Calendar ────────────────────────────────────────────────────────
+
+function mapCalendarEvent(e: Record<string, unknown>) {
+  return {
+    id: idOf(e),
+    title: String(e.title ?? ""),
+    date: String(e.date ?? ""),
+    description: String(e.description ?? ""),
+  };
+}
+
+export async function fetchCalendarEvents(year?: string) {
+  const q = year ? `?year=${encodeURIComponent(year)}` : "";
+  const body = await apiFetch<ApiList<Record<string, unknown>>>(`/api/calendar${q}`);
+  return list(body).map(mapCalendarEvent);
+}
+
+export async function createCalendarEvent(input: { title: string; date: string; description?: string }) {
+  await apiFetch("/api/calendar", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+}
+
+export async function deleteCalendarEvent(id: string) {
+  await apiFetch(`/api/calendar/${id}`, { method: "DELETE" });
+}
+
 // ── Notes & PYQs ─────────────────────────────────────────────────────────────
 
 function mapNote(n: Record<string, unknown>) {

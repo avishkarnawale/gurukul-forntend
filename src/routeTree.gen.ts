@@ -28,6 +28,7 @@ import { Route as AuthenticatedStudentNotesRouteImport } from './routes/_authent
 import { Route as AuthenticatedStudentHomeworkRouteImport } from './routes/_authenticated/student/homework'
 import { Route as AuthenticatedStudentFeesRouteImport } from './routes/_authenticated/student/fees'
 import { Route as AuthenticatedStudentContactRouteImport } from './routes/_authenticated/student/contact'
+import { Route as AuthenticatedStudentCalendarRouteImport } from './routes/_authenticated/student/calendar'
 import { Route as AuthenticatedStudentAttendanceRouteImport } from './routes/_authenticated/student/attendance'
 import { Route as AuthenticatedAdminTeachersRouteImport } from './routes/_authenticated/admin/teachers'
 import { Route as AuthenticatedAdminStudentsRouteImport } from './routes/_authenticated/admin/students'
@@ -37,6 +38,7 @@ import { Route as AuthenticatedAdminNoticesRouteImport } from './routes/_authent
 import { Route as AuthenticatedAdminNotesRouteImport } from './routes/_authenticated/admin/notes'
 import { Route as AuthenticatedAdminHomeworkRouteImport } from './routes/_authenticated/admin/homework'
 import { Route as AuthenticatedAdminFeesRouteImport } from './routes/_authenticated/admin/fees'
+import { Route as AuthenticatedAdminCalendarRouteImport } from './routes/_authenticated/admin/calendar'
 import { Route as AuthenticatedAdminAttendanceRouteImport } from './routes/_authenticated/admin/attendance'
 import { Route as AuthenticatedAdminStudentsIndexRouteImport } from './routes/_authenticated/admin/students.index'
 import { Route as AuthenticatedAdminStudentsIdRouteImport } from './routes/_authenticated/admin/students.$id'
@@ -143,6 +145,12 @@ const AuthenticatedStudentContactRoute =
     path: '/contact',
     getParentRoute: () => AuthenticatedStudentRoute,
   } as any)
+const AuthenticatedStudentCalendarRoute =
+  AuthenticatedStudentCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedStudentRoute,
+  } as any)
 const AuthenticatedStudentAttendanceRoute =
   AuthenticatedStudentAttendanceRouteImport.update({
     id: '/attendance',
@@ -194,6 +202,12 @@ const AuthenticatedAdminFeesRoute = AuthenticatedAdminFeesRouteImport.update({
   path: '/fees',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminCalendarRoute =
+  AuthenticatedAdminCalendarRouteImport.update({
+    id: '/calendar',
+    path: '/calendar',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAttendanceRoute =
   AuthenticatedAdminAttendanceRouteImport.update({
     id: '/attendance',
@@ -219,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/student': typeof AuthenticatedStudentRouteWithChildren
   '/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
+  '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/fees': typeof AuthenticatedAdminFeesRoute
   '/admin/homework': typeof AuthenticatedAdminHomeworkRoute
   '/admin/notes': typeof AuthenticatedAdminNotesRoute
@@ -228,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/admin/students': typeof AuthenticatedAdminStudentsRouteWithChildren
   '/admin/teachers': typeof AuthenticatedAdminTeachersRoute
   '/student/attendance': typeof AuthenticatedStudentAttendanceRoute
+  '/student/calendar': typeof AuthenticatedStudentCalendarRoute
   '/student/contact': typeof AuthenticatedStudentContactRoute
   '/student/fees': typeof AuthenticatedStudentFeesRoute
   '/student/homework': typeof AuthenticatedStudentHomeworkRoute
@@ -249,6 +265,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
+  '/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/admin/fees': typeof AuthenticatedAdminFeesRoute
   '/admin/homework': typeof AuthenticatedAdminHomeworkRoute
   '/admin/notes': typeof AuthenticatedAdminNotesRoute
@@ -257,6 +274,7 @@ export interface FileRoutesByTo {
   '/admin/results': typeof AuthenticatedAdminResultsRoute
   '/admin/teachers': typeof AuthenticatedAdminTeachersRoute
   '/student/attendance': typeof AuthenticatedStudentAttendanceRoute
+  '/student/calendar': typeof AuthenticatedStudentCalendarRoute
   '/student/contact': typeof AuthenticatedStudentContactRoute
   '/student/fees': typeof AuthenticatedStudentFeesRoute
   '/student/homework': typeof AuthenticatedStudentHomeworkRoute
@@ -282,6 +300,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/student': typeof AuthenticatedStudentRouteWithChildren
   '/_authenticated/admin/attendance': typeof AuthenticatedAdminAttendanceRoute
+  '/_authenticated/admin/calendar': typeof AuthenticatedAdminCalendarRoute
   '/_authenticated/admin/fees': typeof AuthenticatedAdminFeesRoute
   '/_authenticated/admin/homework': typeof AuthenticatedAdminHomeworkRoute
   '/_authenticated/admin/notes': typeof AuthenticatedAdminNotesRoute
@@ -291,6 +310,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/students': typeof AuthenticatedAdminStudentsRouteWithChildren
   '/_authenticated/admin/teachers': typeof AuthenticatedAdminTeachersRoute
   '/_authenticated/student/attendance': typeof AuthenticatedStudentAttendanceRoute
+  '/_authenticated/student/calendar': typeof AuthenticatedStudentCalendarRoute
   '/_authenticated/student/contact': typeof AuthenticatedStudentContactRoute
   '/_authenticated/student/fees': typeof AuthenticatedStudentFeesRoute
   '/_authenticated/student/homework': typeof AuthenticatedStudentHomeworkRoute
@@ -316,6 +336,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/student'
     | '/admin/attendance'
+    | '/admin/calendar'
     | '/admin/fees'
     | '/admin/homework'
     | '/admin/notes'
@@ -325,6 +346,7 @@ export interface FileRouteTypes {
     | '/admin/students'
     | '/admin/teachers'
     | '/student/attendance'
+    | '/student/calendar'
     | '/student/contact'
     | '/student/fees'
     | '/student/homework'
@@ -346,6 +368,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/admin/attendance'
+    | '/admin/calendar'
     | '/admin/fees'
     | '/admin/homework'
     | '/admin/notes'
@@ -354,6 +377,7 @@ export interface FileRouteTypes {
     | '/admin/results'
     | '/admin/teachers'
     | '/student/attendance'
+    | '/student/calendar'
     | '/student/contact'
     | '/student/fees'
     | '/student/homework'
@@ -378,6 +402,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/student'
     | '/_authenticated/admin/attendance'
+    | '/_authenticated/admin/calendar'
     | '/_authenticated/admin/fees'
     | '/_authenticated/admin/homework'
     | '/_authenticated/admin/notes'
@@ -387,6 +412,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/students'
     | '/_authenticated/admin/teachers'
     | '/_authenticated/student/attendance'
+    | '/_authenticated/student/calendar'
     | '/_authenticated/student/contact'
     | '/_authenticated/student/fees'
     | '/_authenticated/student/homework'
@@ -551,6 +577,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentContactRouteImport
       parentRoute: typeof AuthenticatedStudentRoute
     }
+    '/_authenticated/student/calendar': {
+      id: '/_authenticated/student/calendar'
+      path: '/calendar'
+      fullPath: '/student/calendar'
+      preLoaderRoute: typeof AuthenticatedStudentCalendarRouteImport
+      parentRoute: typeof AuthenticatedStudentRoute
+    }
     '/_authenticated/student/attendance': {
       id: '/_authenticated/student/attendance'
       path: '/attendance'
@@ -614,6 +647,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminFeesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/calendar': {
+      id: '/_authenticated/admin/calendar'
+      path: '/calendar'
+      fullPath: '/admin/calendar'
+      preLoaderRoute: typeof AuthenticatedAdminCalendarRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/attendance': {
       id: '/_authenticated/admin/attendance'
       path: '/attendance'
@@ -656,6 +696,7 @@ const AuthenticatedAdminStudentsRouteWithChildren =
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAttendanceRoute: typeof AuthenticatedAdminAttendanceRoute
+  AuthenticatedAdminCalendarRoute: typeof AuthenticatedAdminCalendarRoute
   AuthenticatedAdminFeesRoute: typeof AuthenticatedAdminFeesRoute
   AuthenticatedAdminHomeworkRoute: typeof AuthenticatedAdminHomeworkRoute
   AuthenticatedAdminNotesRoute: typeof AuthenticatedAdminNotesRoute
@@ -669,6 +710,7 @@ interface AuthenticatedAdminRouteChildren {
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAttendanceRoute: AuthenticatedAdminAttendanceRoute,
+  AuthenticatedAdminCalendarRoute: AuthenticatedAdminCalendarRoute,
   AuthenticatedAdminFeesRoute: AuthenticatedAdminFeesRoute,
   AuthenticatedAdminHomeworkRoute: AuthenticatedAdminHomeworkRoute,
   AuthenticatedAdminNotesRoute: AuthenticatedAdminNotesRoute,
@@ -685,6 +727,7 @@ const AuthenticatedAdminRouteWithChildren =
 
 interface AuthenticatedStudentRouteChildren {
   AuthenticatedStudentAttendanceRoute: typeof AuthenticatedStudentAttendanceRoute
+  AuthenticatedStudentCalendarRoute: typeof AuthenticatedStudentCalendarRoute
   AuthenticatedStudentContactRoute: typeof AuthenticatedStudentContactRoute
   AuthenticatedStudentFeesRoute: typeof AuthenticatedStudentFeesRoute
   AuthenticatedStudentHomeworkRoute: typeof AuthenticatedStudentHomeworkRoute
@@ -697,6 +740,7 @@ interface AuthenticatedStudentRouteChildren {
 
 const AuthenticatedStudentRouteChildren: AuthenticatedStudentRouteChildren = {
   AuthenticatedStudentAttendanceRoute: AuthenticatedStudentAttendanceRoute,
+  AuthenticatedStudentCalendarRoute: AuthenticatedStudentCalendarRoute,
   AuthenticatedStudentContactRoute: AuthenticatedStudentContactRoute,
   AuthenticatedStudentFeesRoute: AuthenticatedStudentFeesRoute,
   AuthenticatedStudentHomeworkRoute: AuthenticatedStudentHomeworkRoute,

@@ -1,7 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   LayoutDashboard, Calendar, BookOpen, Wallet, Bell, GraduationCap,
-  Users, ClipboardCheck, FileText, FileQuestion, Trophy, UserCog, MessageCircle,
+  Users, ClipboardCheck, FileText, FileQuestion, Trophy, UserCog, MessageCircle, CalendarDays,
 } from "lucide-react";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent, SidebarGroupLabel,
@@ -18,6 +18,7 @@ const studentItems = [
   { title: "Results", url: "/student/results", icon: Trophy },
   { title: "Fees", url: "/student/fees", icon: Wallet },
   { title: "Notices", url: "/student/notices", icon: Bell },
+  { title: "Academic Calendar", url: "/student/calendar", icon: CalendarDays },
   { title: "Contact", url: "/student/contact", icon: MessageCircle },
 ];
 
@@ -32,6 +33,7 @@ const adminItems = [
   { title: "Results", url: "/admin/results", icon: Trophy },
   { title: "Fees", url: "/admin/fees", icon: Wallet },
   { title: "Notices", url: "/admin/notices", icon: Bell },
+  { title: "Academic Calendar", url: "/admin/calendar", icon: CalendarDays },
 ];
 
 // Teachers (staff) get operational tools only — no Teachers management, no Fees.
@@ -44,6 +46,7 @@ const staffItems = [
   { title: "PYQs", url: "/admin/pyqs", icon: FileQuestion },
   { title: "Results", url: "/admin/results", icon: Trophy },
   { title: "Notices", url: "/admin/notices", icon: Bell },
+  { title: "Academic Calendar", url: "/admin/calendar", icon: CalendarDays },
 ];
 
 export function AppSidebar({ role }: { role: AppRole | null }) {

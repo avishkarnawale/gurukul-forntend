@@ -1,13 +1,13 @@
 import { API_BASE_URL, getToken } from "@/lib/api";
 
-async function downloadPdfFromApi(path: string, fallbackName: string) {
+async function downloadFileFromApi(path: string, fallbackName: string, defaultExt: string) {
   const token = getToken();
   const res = await fetch(`${API_BASE_URL}${path}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });
   if (!res.ok) {
     const err = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(err.message || "PDF download failed");
+    throw new Error(err.message || "Download failed");
   }
   const blob = await res.blob();
   const disp = res.headers.get("Content-Disposition");
@@ -16,11 +16,15 @@ async function downloadPdfFromApi(path: string, fallbackName: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
+  a.download = filename.includes(".") ? filename : `${filename}.${defaultExt}`;
   document.body.appendChild(a);
   a.click();
   a.remove();
   URL.revokeObjectURL(url);
+}
+
+async function downloadPdfFromApi(path: string, fallbackName: string) {
+  await downloadFileFromApi(path, fallbackName, "pdf");
 }
 
 export async function downloadClassFeesPdf(classId: string) {
@@ -41,6 +45,21 @@ export async function downloadMonthlyAttendancePdf(classId: string, month: strin
   await downloadPdfFromApi(
     `/api/attendance/export/pdf?class=${encodeURIComponent(classId)}&month=${encodeURIComponent(month)}`,
     "Gurukul-Attendance.pdf",
+  );
+}
+
+export async function downloadClassResultsPdf(classId: string) {
+  await downloadPdfFromApi(
+    `/api/results/export/pdf?class=${encodeURIComponent(classId)}`,
+    "Gurukul-Results.pdf",
+  );
+}
+
+export async function downloadClassResultsWord(classId: string) {
+  await downloadFileFromApi(
+    `/api/results/export/doc?class=${encodeURIComponent(classId)}`,
+    "Gurukul-Results.doc",
+    "doc",
   );
 }
 

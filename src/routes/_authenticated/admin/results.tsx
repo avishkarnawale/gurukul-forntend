@@ -15,18 +15,51 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Save, Trash2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Download, FileText, Loader2, Save, Trash2 } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { downloadClassResultsPdf, downloadClassResultsWord } from "@/lib/fee-receipt";
 
 export const Route = createFileRoute("/_authenticated/admin/results")({ component: Page });
 
 function Page() {
   const qc = useQueryClient();
+  const [exportClassId, setExportClassId] = useState("");
+  const [downloading, setDownloading] = useState<"pdf" | "doc" | null>(null);
   const { data, isLoading, isError, error, refetch } = usePortalQuery({
     queryKey: ["admin-results"],
     queryFn: fetchAllGrades,
   });
+
+  const classesQ = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
+
+  useEffect(() => {
+    if (exportClassId || !classesQ.data?.length) return;
+    const withStudents = classesQ.data.find((c) => (c.studentCount ?? 0) > 0);
+    setExportClassId(withStudents?.id ?? classesQ.data[0].id);
+  }, [classesQ.data, exportClassId]);
+
+  const filteredResults = useMemo(() => {
+    if (!exportClassId) return data ?? [];
+    return (data ?? []).filter((r) => r.students?.class_id === exportClassId);
+  }, [data, exportClassId]);
+
+  const downloadExport = async (format: "pdf" | "doc") => {
+    if (!exportClassId) {
+      toast.error("Select a class first");
+      return;
+    }
+    setDownloading(format);
+    try {
+      if (format === "pdf") await downloadClassResultsPdf(exportClassId);
+      else await downloadClassResultsWord(exportClassId);
+      toast.success(format === "pdf" ? "PDF downloaded" : "Word file downloaded");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setDownloading(null);
+    }
+  };
 
   const remove = async (id: string) => {
     try {
@@ -45,8 +78,60 @@ function Page() {
         <PageHeader title="Results" subtitle="Add marks class-wise — select test details, then enter marks for each student" />
         <AddClassResults onDone={() => qc.invalidateQueries({ queryKey: ["admin-results"] })} />
         <div className="card-elevated mt-6 overflow-hidden">
-          <div className="border-b border-border bg-muted/30 px-4 py-2">
-            <p className="text-sm font-medium">Saved results</p>
+          <div className="flex flex-wrap items-end justify-between gap-3 border-b border-border bg-muted/30 px-4 py-3">
+            <div className="min-w-[200px] flex-1">
+              <p className="mb-1 text-xs font-medium text-muted-foreground">Class for export</p>
+              <Select value={exportClassId} onValueChange={setExportClassId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(classesQ.data ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.name} ({c.studentCount ?? 0})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!exportClassId || downloading !== null}
+                onClick={() => downloadExport("pdf")}
+              >
+                {downloading === "pdf" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                Download PDF
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={!exportClassId || downloading !== null}
+                onClick={() => downloadExport("doc")}
+              >
+                {downloading === "doc" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="mr-2 h-4 w-4" />
+                )}
+                Download Word
+              </Button>
+            </div>
+          </div>
+          <div className="border-b border-border px-4 py-2">
+            <p className="text-sm font-medium">
+              Saved results
+              {exportClassId && (
+                <span className="ml-2 font-normal text-muted-foreground">
+                  ({filteredResults.length} for selected class)
+                </span>
+              )}
+            </p>
           </div>
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -60,7 +145,7 @@ function Page() {
               </tr>
             </thead>
             <tbody>
-              {(data ?? []).map((r) => (
+              {filteredResults.map((r) => (
                 <tr key={r.id} className="border-t border-border">
                   <td className="p-3">
                     <div className="font-medium">{r.students?.full_name}</div>
@@ -81,7 +166,12 @@ function Page() {
               ))}
             </tbody>
           </table>
-          {!data?.length && <EmptyState title="No results yet" hint="Use the form above to add marks for a class" />}
+          {!filteredResults.length && (
+            <EmptyState
+              title="No results for this class"
+              hint={exportClassId ? "Add marks using the form above or select another class." : "Use the form above to add marks for a class"}
+            />
+          )}
         </div>
       </div>
     </QueryState>
