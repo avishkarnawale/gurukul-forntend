@@ -718,7 +718,15 @@ export async function fetchAllGrades() {
   return list(body).map(mapGrade);
 }
 
-const EXAM_TYPES = ["internal", "midterm", "final", "practical", "assignment"] as const;
+export const EXAM_TYPES = ["internal", "midterm", "final", "practical", "assignment"] as const;
+
+export const EXAM_TYPE_LABELS: Record<(typeof EXAM_TYPES)[number], string> = {
+  internal: "Internal test",
+  midterm: "Midterm",
+  final: "Final exam",
+  practical: "Practical",
+  assignment: "Assignment",
+};
 
 function normalizeExamType(name: string) {
   const key = name.trim().toLowerCase();
@@ -742,6 +750,29 @@ export async function createGrade(input: {
       examType: normalizeExamType(input.exam_name),
       marksObtained: input.marks,
       totalMarks: input.max_marks,
+    }),
+  });
+}
+
+export async function createBulkGrades(input: {
+  class_id: string;
+  subject: string;
+  exam_name: string;
+  max_marks: number;
+  entries: Array<{ student_id: string; marks: number }>;
+}) {
+  if (!input.entries.length) return;
+  await apiFetch("/api/results/bulk", {
+    method: "POST",
+    body: JSON.stringify({
+      class: input.class_id,
+      grades: input.entries.map((e) => ({
+        student: e.student_id,
+        subject: input.subject.trim(),
+        examType: normalizeExamType(input.exam_name),
+        marksObtained: e.marks,
+        totalMarks: input.max_marks,
+      })),
     }),
   });
 }

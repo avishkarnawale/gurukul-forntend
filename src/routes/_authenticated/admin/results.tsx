@@ -1,14 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortalQuery } from "@/hooks/use-portal-query";
-import { createGrade, deleteGrade, fetchAllGrades, fetchClasses, fetchStudentsByClass } from "@/lib/portal-api";
-import { PageHeader, EmptyState } from "@/components/portal/ui";
+import {
+  createBulkGrades,
+  deleteGrade,
+  EXAM_TYPE_LABELS,
+  EXAM_TYPES,
+  fetchAllGrades,
+  fetchClasses,
+  fetchStudentsByClass,
+} from "@/lib/portal-api";
+import { PageHeader, EmptyState, QueryState } from "@/components/portal/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Trash2 } from "lucide-react";
+import { Loader2, Save, Trash2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -16,7 +23,10 @@ export const Route = createFileRoute("/_authenticated/admin/results")({ componen
 
 function Page() {
   const qc = useQueryClient();
-  const { data } = usePortalQuery({ queryKey: ["admin-results"], queryFn: fetchAllGrades });
+  const { data, isLoading, isError, error, refetch } = usePortalQuery({
+    queryKey: ["admin-results"],
+    queryFn: fetchAllGrades,
+  });
 
   const remove = async (id: string) => {
     try {
@@ -30,197 +40,260 @@ function Page() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl">
-      <PageHeader
-        title="Results"
-        subtitle="Record exam marks for students"
-        action={<NewResult onDone={() => qc.invalidateQueries({ queryKey: ["admin-results"] })} />}
-      />
-      <div className="card-elevated overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="p-3">Student</th>
-              <th className="p-3">Exam</th>
-              <th className="p-3">Subject</th>
-              <th className="p-3">Marks</th>
-              <th className="p-3">Date</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data ?? []).map((r) => (
-              <tr key={r.id} className="border-t border-border">
-                <td className="p-3">
-                  <div className="font-medium">{r.students?.full_name}</div>
-                  <div className="text-xs text-muted-foreground">Roll {r.students?.roll_number}</div>
-                </td>
-                <td className="p-3">{r.exam_name}</td>
-                <td className="p-3">{r.subjects?.name ?? "—"}</td>
-                <td className="p-3 font-mono">{r.marks} / {r.max_marks}</td>
-                <td className="p-3 text-xs text-muted-foreground">{r.exam_date}</td>
-                <td className="p-3 text-right">
-                  <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </td>
+    <QueryState loading={isLoading} error={isError ? (error as Error).message : null} onRetry={refetch}>
+      <div className="mx-auto max-w-5xl">
+        <PageHeader title="Results" subtitle="Add marks class-wise — select test details, then enter marks for each student" />
+        <AddClassResults onDone={() => qc.invalidateQueries({ queryKey: ["admin-results"] })} />
+        <div className="card-elevated mt-6 overflow-hidden">
+          <div className="border-b border-border bg-muted/30 px-4 py-2">
+            <p className="text-sm font-medium">Saved results</p>
+          </div>
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="p-3">Student</th>
+                <th className="p-3">Exam</th>
+                <th className="p-3">Subject</th>
+                <th className="p-3">Marks</th>
+                <th className="p-3">Date</th>
+                <th className="p-3"></th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-        {!data?.length && <EmptyState title="No results yet" hint="Click Add Result to record marks" />}
+            </thead>
+            <tbody>
+              {(data ?? []).map((r) => (
+                <tr key={r.id} className="border-t border-border">
+                  <td className="p-3">
+                    <div className="font-medium">{r.students?.full_name}</div>
+                    <div className="text-xs text-muted-foreground">Roll {r.students?.roll_number}</div>
+                  </td>
+                  <td className="p-3 capitalize">{r.exam_name.replace(/_/g, " ")}</td>
+                  <td className="p-3">{r.subjects?.name ?? "—"}</td>
+                  <td className="p-3 font-mono">
+                    {r.marks} / {r.max_marks}
+                  </td>
+                  <td className="p-3 text-xs text-muted-foreground">{r.exam_date}</td>
+                  <td className="p-3 text-right">
+                    <Button size="sm" variant="ghost" onClick={() => remove(r.id)}>
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          {!data?.length && <EmptyState title="No results yet" hint="Use the form above to add marks for a class" />}
+        </div>
       </div>
-    </div>
+    </QueryState>
   );
 }
 
-function NewResult({ onDone }: { onDone: () => void }) {
-  const emptyForm = {
-    class_id: "",
-    student_id: "",
-    exam_name: "midterm",
-    subject: "",
-    marks: "",
-    max_marks: "50",
-  };
-  const [open, setOpen] = useState(false);
-  const [form, setForm] = useState(emptyForm);
+function StepLabel({ n, title }: { n: number; title: string }) {
+  return (
+    <p className="mb-1 text-xs font-medium text-muted-foreground">
+      <span className="mr-1 inline-flex h-4 w-4 items-center justify-center rounded-full bg-primary/10 text-[10px] font-semibold text-primary">
+        {n}
+      </span>
+      {title}
+    </p>
+  );
+}
 
-  const { data: classes } = usePortalQuery({
-    queryKey: ["classes"],
-    queryFn: fetchClasses,
-    enabled: open,
-  });
+function AddClassResults({ onDone }: { onDone: () => void }) {
+  const [classId, setClassId] = useState("");
+  const [subject, setSubject] = useState("");
+  const [examType, setExamType] = useState<(typeof EXAM_TYPES)[number]>("midterm");
+  const [maxMarks, setMaxMarks] = useState("50");
+  const [marksByStudent, setMarksByStudent] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
 
-  const { data: students, isLoading: studentsLoading } = usePortalQuery({
-    queryKey: ["students-by-class", form.class_id],
-    queryFn: () => fetchStudentsByClass(form.class_id),
-    enabled: open && !!form.class_id,
-  });
+  const classesQ = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
 
   useEffect(() => {
-    if (!open || form.class_id || !classes?.length) return;
-    const withStudents = classes.find((c) => (c.studentCount ?? 0) > 0);
-    setForm((f) => ({ ...f, class_id: withStudents?.id ?? classes[0].id }));
-  }, [open, classes, form.class_id]);
+    if (classId || !classesQ.data?.length) return;
+    const withStudents = classesQ.data.find((c) => (c.studentCount ?? 0) > 0);
+    setClassId(withStudents?.id ?? classesQ.data[0].id);
+  }, [classesQ.data, classId]);
 
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next);
-    if (!next) setForm(emptyForm);
+  const studentsQ = usePortalQuery({
+    enabled: !!classId,
+    queryKey: ["students-by-class", classId],
+    queryFn: () => fetchStudentsByClass(classId),
+  });
+
+  const onClassChange = (id: string) => {
+    setClassId(id);
+    setMarksByStudent({});
   };
 
-  const onClassChange = (classId: string) => {
-    setForm((f) => ({ ...f, class_id: classId, student_id: "" }));
+  const setupReady = !!classId && subject.trim().length > 0 && !!examType && Number(maxMarks) > 0;
+  const selectedClass = classesQ.data?.find((c) => c.id === classId);
+  const max = Number(maxMarks);
+
+  const setMark = (studentId: string, value: string) => {
+    setMarksByStudent((prev) => ({ ...prev, [studentId]: value }));
   };
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.class_id) {
-      toast.error("Please select a class first.");
+  const filledCount = (studentsQ.data ?? []).filter((s) => marksByStudent[s.id]?.trim()).length;
+
+  const saveAll = async () => {
+    if (!setupReady) {
+      toast.error("Complete steps 1–4 first (class, subject, test type, max marks).");
       return;
     }
-    if (!form.student_id) {
-      toast.error("Please select a student from this class.");
+    const students = studentsQ.data ?? [];
+    const entries: Array<{ student_id: string; marks: number }> = [];
+    for (const s of students) {
+      const raw = marksByStudent[s.id]?.trim();
+      if (!raw) continue;
+      const marks = Number(raw);
+      if (!Number.isFinite(marks) || marks < 0) {
+        toast.error(`Invalid marks for ${s.full_name}`);
+        return;
+      }
+      if (marks > max) {
+        toast.error(`Marks for ${s.full_name} cannot exceed ${max}`);
+        return;
+      }
+      entries.push({ student_id: s.id, marks });
+    }
+    if (!entries.length) {
+      toast.error("Enter marks for at least one student.");
       return;
     }
-    const inClass = (students ?? []).some((s) => s.id === form.student_id);
-    if (!inClass) {
-      toast.error("Selected student is not in this class.");
-      return;
-    }
+
+    setSaving(true);
     try {
-      await createGrade({
-        student_id: form.student_id,
-        class_id: form.class_id,
-        exam_name: form.exam_name,
-        subject: form.subject,
-        marks: Number(form.marks),
-        max_marks: Number(form.max_marks),
+      await createBulkGrades({
+        class_id: classId,
+        subject: subject.trim(),
+        exam_name: examType,
+        max_marks: max,
+        entries,
       });
-      toast.success("Result saved");
+      toast.success(`Saved marks for ${entries.length} student${entries.length === 1 ? "" : "s"}`);
+      setMarksByStudent({});
       onDone();
-      setForm(emptyForm);
-      setOpen(false);
-    } catch (err: unknown) {
-      toast.error(err instanceof Error ? err.message : "Failed");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Save failed");
+    } finally {
+      setSaving(false);
     }
   };
-
-  const selectedClass = classes?.find((c) => c.id === form.class_id);
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4" /> Add Result</Button></DialogTrigger>
-      <DialogContent>
-        <DialogHeader><DialogTitle>Record marks</DialogTitle></DialogHeader>
-        <form onSubmit={submit} className="space-y-3">
-          <div>
-            <Label>Class</Label>
-            <Select value={form.class_id} onValueChange={onClassChange}>
-              <SelectTrigger><SelectValue placeholder="Select class" /></SelectTrigger>
-              <SelectContent>
-                {(classes ?? []).map((c) => (
-                  <SelectItem key={c.id} value={c.id}>
-                    {c.name} ({c.studentCount ?? 0} students)
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-1 text-xs text-muted-foreground">
-              Only students enrolled in this class can receive marks.
+    <div className="card-elevated overflow-hidden">
+      <div className="border-b border-border bg-muted/30 px-4 py-2">
+        <p className="text-sm font-medium">Add results</p>
+      </div>
+
+      <div className="grid gap-4 p-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div>
+          <StepLabel n={1} title="Select class" />
+          <Select value={classId} onValueChange={onClassChange}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select class" />
+            </SelectTrigger>
+            <SelectContent>
+              {(classesQ.data ?? []).map((c) => (
+                <SelectItem key={c.id} value={c.id}>
+                  {c.name} ({c.studentCount ?? 0})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <StepLabel n={2} title="Subject name" />
+          <Input
+            placeholder="e.g. Mathematics"
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+          />
+        </div>
+        <div>
+          <StepLabel n={3} title="Test type" />
+          <Select value={examType} onValueChange={(v) => setExamType(v as (typeof EXAM_TYPES)[number])}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {EXAM_TYPES.map((e) => (
+                <SelectItem key={e} value={e}>
+                  {EXAM_TYPE_LABELS[e]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <StepLabel n={4} title="Max marks" />
+          <Input
+            type="number"
+            min={1}
+            value={maxMarks}
+            onChange={(e) => setMaxMarks(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {classId && (
+        <div className="border-t border-border">
+          <div className="flex items-center justify-between gap-3 px-4 py-2">
+            <p className="text-sm text-muted-foreground">
+              {studentsQ.isLoading
+                ? "Loading students…"
+                : `${studentsQ.data?.length ?? 0} students in ${selectedClass?.name ?? "class"}`}
+              {setupReady && filledCount > 0 && ` · ${filledCount} with marks entered`}
             </p>
+            <Button size="sm" disabled={!setupReady || saving || filledCount === 0} onClick={saveAll}>
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+              Save marks
+            </Button>
           </div>
-          <div>
-            <Label>Student</Label>
-            <Select
-              value={form.student_id}
-              onValueChange={(v) => setForm({ ...form, student_id: v })}
-              disabled={!form.class_id || studentsLoading}
+
+          {studentsQ.isLoading && (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          )}
+
+          {!studentsQ.isLoading && !(studentsQ.data ?? []).length && (
+            <EmptyState
+              title="No students in this class"
+              hint="Add students under the Students menu first."
+            />
+          )}
+
+          {(studentsQ.data ?? []).map((s) => (
+            <div
+              key={s.id}
+              className="flex items-center justify-between gap-3 border-t border-border px-4 py-3 last:border-b-0"
             >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    !form.class_id
-                      ? "Select class first"
-                      : studentsLoading
-                        ? "Loading students…"
-                        : (students ?? []).length
-                          ? "Select student"
-                          : "No students in this class"
-                  }
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">{s.full_name}</p>
+                <p className="text-xs text-muted-foreground">Roll {s.roll_number}</p>
+              </div>
+              <div className="flex shrink-0 items-center gap-2">
+                <Label htmlFor={`marks-${s.id}`} className="sr-only">
+                  Marks for {s.full_name}
+                </Label>
+                <Input
+                  id={`marks-${s.id}`}
+                  type="number"
+                  min={0}
+                  max={max > 0 ? max : undefined}
+                  placeholder={setupReady ? `out of ${max}` : "Set max marks first"}
+                  disabled={!setupReady}
+                  value={marksByStudent[s.id] ?? ""}
+                  onChange={(e) => setMark(s.id, e.target.value)}
+                  className="w-28 text-right font-mono"
                 />
-              </SelectTrigger>
-              <SelectContent>
-                {(students ?? []).map((s) => (
-                  <SelectItem key={s.id} value={s.id}>{s.full_name} ({s.roll_number})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.class_id && !studentsLoading && !(students ?? []).length && (
-              <p className="mt-1 text-xs text-destructive">
-                No students in {selectedClass?.name ?? "this class"}. Add students first.
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Exam type</Label>
-            <Select value={form.exam_name} onValueChange={(v) => setForm({ ...form, exam_name: v })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {["midterm", "final", "internal", "practical", "assignment"].map((e) => (
-                  <SelectItem key={e} value={e}>{e}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div><Label>Subject</Label><Input value={form.subject} onChange={(e) => setForm({ ...form, subject: e.target.value })} required /></div>
-          <div className="grid grid-cols-2 gap-3">
-            <div><Label>Marks</Label><Input type="number" value={form.marks} onChange={(e) => setForm({ ...form, marks: e.target.value })} required /></div>
-            <div><Label>Max marks</Label><Input type="number" value={form.max_marks} onChange={(e) => setForm({ ...form, max_marks: e.target.value })} required /></div>
-          </div>
-          <Button type="submit" className="w-full">Save</Button>
-        </form>
-      </DialogContent>
-    </Dialog>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
