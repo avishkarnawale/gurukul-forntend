@@ -1,13 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortalQuery } from "@/hooks/use-portal-query";
-import { createCalendarEvent, deleteCalendarEvent, fetchCalendarEvents } from "@/lib/portal-api";
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
+  fetchCalendarEvents,
+  fetchClasses,
+} from "@/lib/portal-api";
 import { PageHeader, EmptyState } from "@/components/portal/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -28,9 +35,17 @@ function fmtEventDate(dateStr: string) {
 function Page() {
   const qc = useQueryClient();
   const year = String(new Date().getFullYear());
+  const [filterClass, setFilterClass] = useState("all");
+
+  const classesQ = usePortalQuery({
+    queryKey: ["classes"],
+    queryFn: fetchClasses,
+    staleTime: 5 * 60_000,
+  });
+
   const { data } = usePortalQuery({
-    queryKey: ["calendar", year],
-    queryFn: () => fetchCalendarEvents(year),
+    queryKey: ["calendar", year, filterClass],
+    queryFn: () => fetchCalendarEvents(year, filterClass),
   });
 
   const remove = async (id: string) => {
@@ -44,7 +59,7 @@ function Page() {
   };
 
   const grouped = useMemo(() => {
-    const map = new Map<string, typeof data>();
+    const map = new Map<string, NonNullable<typeof data>>();
     for (const e of data ?? []) {
       const key = e.date.slice(0, 7);
       if (!map.has(key)) map.set(key, []);
@@ -57,13 +72,30 @@ function Page() {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         title="Academic Calendar"
-        subtitle="Add holidays, exams, and important dates for students"
+        subtitle="Post events for all classes or a specific class only"
         action={
           <NewEvent
+            classes={classesQ.data ?? []}
             onDone={() => qc.invalidateQueries({ queryKey: ["calendar"] })}
           />
         }
       />
+      <div className="card-elevated mb-4 p-4">
+        <Label className="mb-1 block text-xs text-muted-foreground">Show events for</Label>
+        <Select value={filterClass} onValueChange={setFilterClass}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All classes</SelectItem>
+            {(classesQ.data ?? []).map((c) => (
+              <SelectItem key={c.id} value={c.id}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
       <div className="space-y-6">
         {grouped.map(([monthKey, events]) => (
           <div key={monthKey}>
@@ -82,7 +114,12 @@ function Page() {
                       <CalendarDays className="h-5 w-5" />
                     </div>
                     <div>
-                      <p className="font-medium">{e.title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{e.title}</p>
+                        <Badge variant="secondary" className="text-[10px]">
+                          {e.class_label}
+                        </Badge>
+                      </div>
                       <p className="text-xs text-muted-foreground">{fmtEventDate(e.date)}</p>
                       {e.description && (
                         <p className="mt-1 text-sm text-muted-foreground">{e.description}</p>
@@ -105,18 +142,39 @@ function Page() {
   );
 }
 
-function NewEvent({ onDone }: { onDone: () => void }) {
+function NewEvent({
+  classes,
+  onDone,
+}: {
+  classes: Array<{ id: string; name: string }>;
+  onDone: () => void;
+}) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ title: "", date: new Date().toISOString().slice(0, 10), description: "" });
+  const [form, setForm] = useState({
+    title: "",
+    date: new Date().toISOString().slice(0, 10),
+    description: "",
+    target_class: "all",
+  });
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await createCalendarEvent(form);
+      await createCalendarEvent({
+        title: form.title,
+        date: form.date,
+        description: form.description,
+        target_class: form.target_class === "all" ? null : form.target_class,
+      });
       toast.success("Event added");
       onDone();
       setOpen(false);
-      setForm({ title: "", date: new Date().toISOString().slice(0, 10), description: "" });
+      setForm({
+        title: "",
+        date: new Date().toISOString().slice(0, 10),
+        description: "",
+        target_class: "all",
+      });
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Failed");
     }
@@ -134,6 +192,28 @@ function NewEvent({ onDone }: { onDone: () => void }) {
           <DialogTitle>Add calendar event</DialogTitle>
         </DialogHeader>
         <form onSubmit={submit} className="space-y-3">
+          <div>
+            <Label>Class</Label>
+            <Select
+              value={form.target_class}
+              onValueChange={(v) => setForm({ ...form, target_class: v })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All classes</SelectItem>
+                {classes.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Only students in the selected class will see this event (or everyone if all classes).
+            </p>
+          </div>
           <div>
             <Label>Event name</Label>
             <Input

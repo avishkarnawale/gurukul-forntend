@@ -44,7 +44,13 @@ function Page() {
             <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Upcoming</h3>
             <div className="space-y-2">
               {upcoming.map((e) => (
-                <EventCard key={e.id} title={e.title} date={e.date} description={e.description} />
+                <EventCard
+                  key={e.id}
+                  title={e.title}
+                  date={e.date}
+                  description={e.description}
+                  classLabel={e.class_label}
+                />
               ))}
             </div>
           </section>
@@ -54,7 +60,14 @@ function Page() {
             <h3 className="mb-2 text-sm font-semibold text-muted-foreground">Past events</h3>
             <div className="space-y-2">
               {past.map((e) => (
-                <EventCard key={e.id} title={e.title} date={e.date} description={e.description} muted />
+                <EventCard
+                  key={e.id}
+                  title={e.title}
+                  date={e.date}
+                  description={e.description}
+                  classLabel={e.class_label}
+                  muted
+                />
               ))}
             </div>
           </section>
@@ -71,11 +84,13 @@ function EventCard({
   title,
   date,
   description,
+  classLabel,
   muted,
 }: {
   title: string;
   date: string;
   description: string;
+  classLabel?: string;
   muted?: boolean;
 }) {
   return (
@@ -84,7 +99,14 @@ function EventCard({
         <CalendarDays className="h-5 w-5" />
       </div>
       <div>
-        <p className="font-medium">{title}</p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="font-medium">{title}</p>
+                        {classLabel && classLabel !== "All classes" && (
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                            {classLabel}
+                          </span>
+                        )}
+                      </div>
         <p className="text-xs text-muted-foreground">{fmtEventDate(date)}</p>
         {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       </div>

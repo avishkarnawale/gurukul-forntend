@@ -688,6 +688,7 @@ export async function markAllNotificationsRead() {
 // ── Results / Grades ─────────────────────────────────────────────────────────
 
 function mapGrade(g: Record<string, unknown>) {
+  const st = g.student as Record<string, unknown> | undefined;
   return {
     id: idOf(g),
     exam_name: String(g.examType ?? ""),
@@ -695,11 +696,12 @@ function mapGrade(g: Record<string, unknown>) {
     max_marks: Number(g.totalMarks ?? 0),
     exam_date: fmtDate(g.createdAt as string),
     subjects: { name: String(g.subject ?? "") },
-    students: g.student
+    students: st
       ? {
-          full_name: String((g.student as Record<string, unknown>).name ?? ""),
-          roll_number: String((g.student as Record<string, unknown>).rollNumber ?? ""),
-          class_id: String((g.student as Record<string, unknown>).class ?? ""),
+          id: String(st._id ?? ""),
+          full_name: String(st.name ?? ""),
+          roll_number: String(st.rollNumber ?? ""),
+          class_id: String(st.class ?? ""),
         }
       : null,
   };
@@ -715,6 +717,13 @@ export async function fetchMyGrades() {
 
 export async function fetchAllGrades() {
   const body = await apiFetch<ApiList<Record<string, unknown>>>("/api/results/class");
+  return list(body).map(mapGrade);
+}
+
+export async function fetchGradesByClass(classId: string) {
+  const body = await apiFetch<ApiList<Record<string, unknown>>>(
+    `/api/results/class?class=${encodeURIComponent(classId)}`,
+  );
   return list(body).map(mapGrade);
 }
 
@@ -789,19 +798,34 @@ function mapCalendarEvent(e: Record<string, unknown>) {
     title: String(e.title ?? ""),
     date: String(e.date ?? ""),
     description: String(e.description ?? ""),
+    target_class: e.targetClass ? String(e.targetClass) : null,
+    class_label: e.targetClass ? formatClassLabel(String(e.targetClass)) : "All classes",
   };
 }
 
-export async function fetchCalendarEvents(year?: string) {
-  const q = year ? `?year=${encodeURIComponent(year)}` : "";
+export async function fetchCalendarEvents(year?: string, classId?: string) {
+  const params = new URLSearchParams();
+  if (year) params.set("year", year);
+  if (classId && classId !== "all") params.set("class", classId);
+  const q = params.toString() ? `?${params.toString()}` : "";
   const body = await apiFetch<ApiList<Record<string, unknown>>>(`/api/calendar${q}`);
   return list(body).map(mapCalendarEvent);
 }
 
-export async function createCalendarEvent(input: { title: string; date: string; description?: string }) {
+export async function createCalendarEvent(input: {
+  title: string;
+  date: string;
+  description?: string;
+  target_class?: string | null;
+}) {
   await apiFetch("/api/calendar", {
     method: "POST",
-    body: JSON.stringify(input),
+    body: JSON.stringify({
+      title: input.title,
+      date: input.date,
+      description: input.description || "",
+      targetClass: input.target_class && input.target_class !== "all" ? input.target_class : null,
+    }),
   });
 }
 

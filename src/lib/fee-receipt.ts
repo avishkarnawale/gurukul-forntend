@@ -63,31 +63,20 @@ export async function downloadClassResultsWord(classId: string) {
   );
 }
 
-/** Download fee receipt as PDF from API. */
+/** Download fee receipt as PDF (student portal). */
 export async function downloadFeeReceipt(feeId: string, paymentId: string) {
-  const token = getToken();
-  const res = await fetch(`${API_BASE_URL}/api/fees/me/${feeId}/receipt/${paymentId}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-  });
-  if (!res.ok) {
-    const err = (await res.json().catch(() => ({}))) as { message?: string };
-    throw new Error(err.message || "Receipt download failed");
-  }
-  const blob = await res.blob();
-  if (!blob.type.includes("pdf") && blob.size < 100) {
-    throw new Error("Invalid receipt file");
-  }
-  const disp = res.headers.get("Content-Disposition");
-  const match = disp?.match(/filename="(.+)"/);
-  const filename = match?.[1] ?? `Gurukul-Receipt-${paymentId}.pdf`;
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename.endsWith(".pdf") ? filename : `${filename}.pdf`;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+  await downloadPdfFromApi(
+    `/api/fees/me/${feeId}/receipt/${paymentId}`,
+    `Gurukul-Receipt-${paymentId}.pdf`,
+  );
+}
+
+/** Download fee receipt as PDF (admin — any student). */
+export async function downloadAdminFeeReceipt(feeId: string, paymentId: string) {
+  await downloadPdfFromApi(
+    `/api/fees/${feeId}/receipt/${paymentId}`,
+    `Gurukul-Receipt-${paymentId}.pdf`,
+  );
 }
 
 /** Download a student's full progress report (admin) as PDF. */

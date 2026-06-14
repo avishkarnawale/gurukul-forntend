@@ -1,13 +1,13 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { usePortalQuery } from "@/hooks/use-portal-query";
-import { assignMissingFees, fetchAllFees, fetchClasses, updateFeePaid, updateFeeTotal } from "@/lib/portal-api";
+import { assignMissingFees, fetchAllFees, fetchClasses, feeReceiptPayments, updateFeePaid, updateFeeTotal, type StudentFee } from "@/lib/portal-api";
 import { PageHeader, EmptyState, StatCard, QueryState } from "@/components/portal/ui";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Wallet, CheckCircle2, AlertCircle, UserPlus, Download, Loader2 } from "lucide-react";
-import { downloadClassFeesPdf } from "@/lib/fee-receipt";
+import { downloadAdminFeeReceipt, downloadClassFeesPdf } from "@/lib/fee-receipt";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
@@ -19,6 +19,7 @@ function Page() {
   const [assigning, setAssigning] = useState(false);
   const [assignAmount, setAssignAmount] = useState("");
   const [downloading, setDownloading] = useState(false);
+  const [receiptBusy, setReceiptBusy] = useState<string | null>(null);
 
   const classesQ = usePortalQuery({ queryKey: ["classes"], queryFn: fetchClasses });
 
@@ -106,6 +107,46 @@ function Page() {
     }
   };
 
+  const downloadReceipt = async (fee: StudentFee, paymentId: string) => {
+    const key = `${fee.id}-${paymentId}`;
+    setReceiptBusy(key);
+    try {
+      await downloadAdminFeeReceipt(fee.id, paymentId);
+      toast.success("Receipt downloaded");
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setReceiptBusy(null);
+    }
+  };
+
+  const downloadAllReceipts = async () => {
+    const fees = data ?? [];
+    const jobs: Array<{ fee: StudentFee; paymentId: string }> = [];
+    for (const fee of fees) {
+      for (const p of feeReceiptPayments(fee)) {
+        const paymentId = p.id.endsWith("-summary") ? "summary" : p.id;
+        jobs.push({ fee, paymentId });
+      }
+    }
+    if (!jobs.length) {
+      toast.error("No paid fees with receipts in this class");
+      return;
+    }
+    setReceiptBusy("all");
+    try {
+      for (const { fee, paymentId } of jobs) {
+        await downloadAdminFeeReceipt(fee.id, paymentId);
+        await new Promise((r) => setTimeout(r, 400));
+      }
+      toast.success(`Downloaded ${jobs.length} receipt${jobs.length === 1 ? "" : "s"}`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Download failed");
+    } finally {
+      setReceiptBusy(null);
+    }
+  };
+
   const err = classesQ.isError
     ? (classesQ.error as Error).message
     : feesQ.isError
@@ -133,7 +174,19 @@ function Page() {
             <div className="flex flex-wrap items-center gap-2">
               <Button variant="outline" disabled={!className || downloading} onClick={downloadPdf}>
                 {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-                Download PDF
+                Class PDF
+              </Button>
+              <Button
+                variant="outline"
+                disabled={!className || receiptBusy !== null}
+                onClick={downloadAllReceipts}
+              >
+                {receiptBusy === "all" ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Download className="mr-2 h-4 w-4" />
+                )}
+                All receipts
               </Button>
               <Input
                 type="number"
@@ -186,6 +239,7 @@ function Page() {
                     <th className="p-3">Total</th>
                     <th className="p-3">Paid</th>
                     <th className="p-3">Status</th>
+                    <th className="p-3">Receipt</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -209,6 +263,9 @@ function Page() {
                           {f.status}
                         </span>
                       </td>
+                      <td className="p-3">
+                        <FeeReceiptActions fee={f} busyKey={receiptBusy} onDownload={downloadReceipt} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -228,6 +285,46 @@ function Page() {
         </div>
       </div>
     </QueryState>
+  );
+}
+
+function FeeReceiptActions({
+  fee,
+  busyKey,
+  onDownload,
+}: {
+  fee: StudentFee;
+  busyKey: string | null;
+  onDownload: (fee: StudentFee, paymentId: string) => void;
+}) {
+  const payments = feeReceiptPayments(fee);
+  if (!payments.length) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex flex-wrap gap-1">
+      {payments.map((p) => {
+        const paymentId = p.id.endsWith("-summary") ? "summary" : p.id;
+        const key = `${fee.id}-${paymentId}`;
+        const busy = busyKey === key || busyKey === "all";
+        return (
+          <Button
+            key={p.id}
+            size="sm"
+            variant="outline"
+            disabled={busyKey !== null}
+            onClick={() => onDownload(fee, paymentId)}
+          >
+            {busy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Download className="h-4 w-4" />
+            )}
+          </Button>
+        );
+      })}
+    </div>
   );
 }
 

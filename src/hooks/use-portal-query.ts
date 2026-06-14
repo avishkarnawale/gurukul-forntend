@@ -13,5 +13,6 @@ export function usePortalQuery<TData>(options: UseQueryOptions<TData>) {
     ...options,
     queryKey,
     enabled,
+    staleTime: options.staleTime ?? 60_000,
   });
 }
