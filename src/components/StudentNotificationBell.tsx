@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { Bell, CheckCheck } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
@@ -19,15 +20,18 @@ import { toast } from "sonner";
 
 export function StudentNotificationBell() {
   const qc = useQueryClient();
+  const [open, setOpen] = useState(false);
   const unread = useStudentNotificationPoller();
 
-  const { data } = usePortalQuery({
+  const { data, isLoading } = usePortalQuery({
     queryKey: ["student-notifications-list"],
     queryFn: fetchMyNotifications,
+    enabled: open,
+    staleTime: 120_000,
   });
 
   const items = data?.items ?? [];
-  const unreadFromList = data?.unread ?? unread;
+  const unreadFromList = open && data ? data.unread : unread;
 
   const markOne = async (id: string) => {
     try {
@@ -50,13 +54,13 @@ export function StudentNotificationBell() {
   };
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative" aria-label="Notifications">
           <Bell className="h-4 w-4" />
-          {unreadFromList > 0 && (
+          {unread > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
-              {unreadFromList > 9 ? "9+" : unreadFromList}
+              {unread > 9 ? "9+" : unread}
             </span>
           )}
         </Button>
@@ -71,7 +75,10 @@ export function StudentNotificationBell() {
           )}
         </div>
         <div className="max-h-72 overflow-y-auto">
-          {!items.length && (
+          {isLoading && (
+            <p className="px-3 py-6 text-center text-sm text-muted-foreground">Loading…</p>
+          )}
+          {!isLoading && !items.length && (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">No notifications yet</p>
           )}
           {items.map((n) => (

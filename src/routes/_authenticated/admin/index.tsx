@@ -15,6 +15,7 @@ function AdminDashboard() {
   const { data, isLoading, isError, error, refetch } = usePortalQuery({
     queryKey: ["admin-dashboard"],
     queryFn: fetchAdminDashboard,
+    staleTime: 2 * 60_000,
   });
 
   const stats = data?.stats;

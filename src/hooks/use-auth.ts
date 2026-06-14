@@ -12,20 +12,20 @@ export interface AuthState {
   session: { access_token: string } | null;
 }
 
+function readAuthFromStorage() {
+  if (typeof window === "undefined") {
+    return { token: null as string | null, role: null as AppRole | null, user: null };
+  }
+  return { token: getToken(), role: getRole(), user: getUser() };
+}
+
 export function useAuth(): AuthState {
-  const [token, setToken] = useState<string | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
-  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [auth, setAuth] = useState(readAuthFromStorage);
+  const [loading, setLoading] = useState(() => typeof window === "undefined");
 
   useEffect(() => {
-    const read = () => {
-      setToken(getToken());
-      setRole(getRole());
-      setUser(getUser());
-      setLoading(false);
-    };
-    read();
+    setLoading(false);
+    const read = () => setAuth(readAuthFromStorage());
     window.addEventListener("gk-auth-change", read);
     window.addEventListener("storage", read);
     return () => {
@@ -33,6 +33,8 @@ export function useAuth(): AuthState {
       window.removeEventListener("storage", read);
     };
   }, []);
+
+  const { token, role, user } = auth;
 
   return {
     token,

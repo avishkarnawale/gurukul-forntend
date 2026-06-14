@@ -1,8 +1,10 @@
-import { createFileRoute, Outlet, redirect, useNavigate, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { clearSession } from "@/lib/api";
 import { useAuth, primaryRole } from "@/hooks/use-auth";
+import { fetchClasses } from "@/lib/portal-api";
 import { StudentNotificationBell } from "@/components/StudentNotificationBell";
 import { Loader2, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,8 +15,9 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthedLayout() {
-  const { session, loading, roles } = useAuth();
+  const { session, loading, roles, user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const path = useRouterState({ select: (s) => s.location.pathname });
   const role = primaryRole(roles);
   const isStudent = role === "student";
@@ -22,6 +25,15 @@ function AuthedLayout() {
   useEffect(() => {
     if (!loading && !session) navigate({ to: "/login" });
   }, [loading, session, navigate]);
+
+  useEffect(() => {
+    if (loading || !session || isStudent || !user?.id) return;
+    queryClient.prefetchQuery({
+      queryKey: ["classes", user.id],
+      queryFn: fetchClasses,
+      staleTime: 10 * 60_000,
+    });
+  }, [loading, session, isStudent, user?.id, queryClient]);
 
   useEffect(() => {
     if (loading || !session) return;

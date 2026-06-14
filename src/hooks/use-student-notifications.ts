@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
 import { fetchUnreadNotificationCount } from "@/lib/portal-api";
 
-/** Poll unread count and toast when new academic notices arrive. */
+/** Poll unread count occasionally — not on every page interaction. */
 export function useStudentNotificationPoller() {
   const { session, role, user } = useAuth();
   const qc = useQueryClient();
@@ -15,8 +15,9 @@ export function useStudentNotificationPoller() {
     queryKey: ["notifications-unread", user?.id],
     queryFn: fetchUnreadNotificationCount,
     enabled,
-    refetchInterval: 25_000,
-    refetchOnWindowFocus: true,
+    staleTime: 90_000,
+    refetchInterval: 120_000,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {

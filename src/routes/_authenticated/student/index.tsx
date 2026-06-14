@@ -12,8 +12,7 @@ function StudentDashboard() {
   const { data, isLoading, isError, error, refetch } = usePortalQuery({
     queryKey: ["student-dashboard"],
     queryFn: fetchStudentDashboard,
-    staleTime: 60_000,
-    refetchOnMount: true,
+    staleTime: 3 * 60_000,
   });
 
   const student = data?.student;

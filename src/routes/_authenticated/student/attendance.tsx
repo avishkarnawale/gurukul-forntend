@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { usePortalQuery } from "@/hooks/use-portal-query";
 import { fetchMyAttendance } from "@/lib/portal-api";
 import { PageHeader, StatCard, QueryState } from "@/components/portal/ui";
@@ -10,13 +11,17 @@ function Page() {
   const { data, isLoading, isError, error, refetch } = usePortalQuery({
     queryKey: ["my-attendance"],
     queryFn: fetchMyAttendance,
-    refetchOnMount: "always",
+    staleTime: 5 * 60_000,
   });
 
-  const total = data?.length ?? 0;
-  const present = data?.filter((r) => r.status === "present").length ?? 0;
-  const absent = data?.filter((r) => r.status === "absent").length ?? 0;
-  const pct = total ? Math.round((present / total) * 100) : 0;
+  const rows = data ?? [];
+  const { total, present, absent, pct } = useMemo(() => {
+    const total = rows.length;
+    const present = rows.filter((r) => r.status === "present").length;
+    const absent = rows.filter((r) => r.status === "absent").length;
+    const pct = total ? Math.round((present / total) * 100) : 0;
+    return { total, present, absent, pct };
+  }, [rows]);
 
   return (
     <QueryState loading={isLoading} error={isError ? (error as Error).message : null} onRetry={() => refetch()}>
@@ -30,7 +35,7 @@ function Page() {
       <div className="card-elevated mt-6 p-6">
         <h3 className="font-display text-base font-bold">Recent Days</h3>
         <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-7">
-          {(data ?? []).map((d) => (
+          {(rows).map((d) => (
             <div
               key={d.id}
               className={`rounded-lg border p-2 text-center text-xs ${d.status === "present" ? "border-success/30 bg-success/10 text-success" : d.status === "absent" ? "border-destructive/30 bg-destructive/10 text-destructive" : "border-warning/30 bg-warning/10 text-warning"}`}
